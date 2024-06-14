@@ -22,11 +22,6 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
 
     const char * string;
-    //testthread = new TestThread(0,string,ui);  //jiang ui zhizhen chuanru TestThread lei
-//    Camera_viewfinder = new QCameraViewfinder(this);
-//    Hdmiin_viewfinder = new QCameraViewfinder(this);
-//    camerathread = new CameraThread(0,string,ui,Camera_viewfinder,Hdmiin_viewfinder,this);
-    //camerathread->moveToThread(testthread);
     initUI();
 
     timer = new QTimer(this);
@@ -54,7 +49,7 @@ MainWindow::~MainWindow()
     delete RtcThread;
     delete AudioThread;
     delete PinThread;
-   // camerathread->requestInterruption();
+    //camerathread->requestInterruption();
     //camerathread->wait();
     delete ui;
 }
@@ -468,14 +463,6 @@ void MainWindow::on_TestButton_clicked()
     RtcThread = new TestThread(6,command,ui,this);
     RtcThread->start();
 
-//    command = "sudo sh /opt/armsomtest/shell/hdmiin.sh";
-//    TestThread * HdmiinThread = new TestThread(MANUAL_TESTING,command,ui);  //MANUAL_TESTING 表示人工测试
-//    HdmiinThread->start();
-
-//    command = "sudo sh /opt/armsomtest/shell/camera.sh";
-//    TestThread * CameraThread = new TestThread(MANUAL_TESTING,command,ui);Hdmiin
-//    CameraThread->start();
-
     if(ok)timer->start(33);
     else timer->stop();
     ok = !ok;
@@ -498,27 +485,6 @@ void MainWindow::on_pass_Button_clicked()
 }
 
 
-//void MainWindow::on_WIFI_Button_clicked()
-//{
-//    int status =0;
-//    status = system("sudo sh /opt/armsomtest/shell/wifi.sh");
-//    if(status)
-//    {
-//       ui->tableWidget->setItem(0,2,new QTableWidgetItem("不通过"));
-//       ui->tableWidget->item(0, 0)->setBackgroundColor(Qt::red);//faild red
-//       ui->tableWidget->item(0, 1)->setBackgroundColor(Qt::red);
-//       ui->tableWidget->item(0, 2)->setBackgroundColor(Qt::red);
-//    }
-//    else   //0 is sucess
-//    {
-//       ui->tableWidget->setItem(0,2,new QTableWidgetItem("通过"));
-//       ui->tableWidget->item(0, 0)->setBackgroundColor(Qt::green);//faild red;//sucess green
-//       ui->tableWidget->item(0, 1)->setBackgroundColor(Qt::green);
-//       ui->tableWidget->item(0, 2)->setBackgroundColor(Qt::green);
-//    }
-//}
-
-
 void MainWindow::on_WIFI_Button_clicked()
 {
     const char *command = "sudo sh /opt/armsomtest/shell/wifi.sh";
@@ -531,23 +497,6 @@ void MainWindow::on_BT_Button_clicked()
     const char *command = "sudo sh /opt/armsomtest/shell/bt.sh";
     TestThread * BtThread = new TestThread(1,command,ui);
     BtThread->start();
-
-//    int status =0;
-//    status = system("sudo sh /opt/armsomtest/shell/bt.sh");
-//    if(status)
-//    {
-//       ui->tableWidget->setItem(1,2,new QTableWidgetItem("不通过"));
-//       ui->tableWidget->item(1, 0)->setBackgroundColor(Qt::red);//faild red
-//       ui->tableWidget->item(1, 1)->setBackgroundColor(Qt::red);
-//       ui->tableWidget->item(1, 2)->setBackgroundColor(Qt::red);
-//    }
-//    else   //0 is sucess
-//    {
-//       ui->tableWidget->setItem(1,2,new QTableWidgetItem("通过"));
-//       ui->tableWidget->item(1, 0)->setBackgroundColor(Qt::green);//faild red;//sucess green
-//       ui->tableWidget->item(1, 1)->setBackgroundColor(Qt::green);
-//       ui->tableWidget->item(1, 2)->setBackgroundColor(Qt::green);
-//    }
 }
 
 void MainWindow::on_eth_Button_clicked()
@@ -555,22 +504,6 @@ void MainWindow::on_eth_Button_clicked()
     const char *command = "sudo sh /opt/armsomtest/shell/eth.sh";
     TestThread * Ethhread = new TestThread(2,command,ui);
     Ethhread->start();
-//    int status =0;
-//    status = system("sudo sh /opt/armsomtest/shell/eth.sh");
-//    if(status)
-//    {
-//       ui->tableWidget->setItem(2,2,new QTableWidgetItem("不通过"));
-//       ui->tableWidget->item(2, 0)->setBackgroundColor(Qt::red);//faild red
-//       ui->tableWidget->item(2, 1)->setBackgroundColor(Qt::red);
-//       ui->tableWidget->item(2, 2)->setBackgroundColor(Qt::red);
-//    }
-//    else   //0 is sucess
-//    {
-//       ui->tableWidget->setItem(2,2,new QTableWidgetItem("通过"));
-//       ui->tableWidget->item(2, 0)->setBackgroundColor(Qt::green);//faild red;//sucess green
-//       ui->tableWidget->item(2, 1)->setBackgroundColor(Qt::green);
-//       ui->tableWidget->item(2, 2)->setBackgroundColor(Qt::green);
-//    }
 }
 
 
@@ -579,23 +512,6 @@ void MainWindow::on_M2_Button_clicked()
     const char *command = "sudo sh /opt/armsomtest/shell/M2.sh";
     TestThread * M2Thread = new TestThread(3,command,ui);
     M2Thread->start();
-
-//    int status =0;
-//    status = system("sudo sh /opt/armsomtest/shell/M2.sh");
-//    if(status)
-//    {
-//       ui->tableWidget->setItem(3,2,new QTableWidgetItem("不通过"));
-//       ui->tableWidget->item(3, 0)->setBackgroundColor(Qt::red);//faild red
-//       ui->tableWidget->item(3, 1)->setBackgroundColor(Qt::red);
-//       ui->tableWidget->item(3, 2)->setBackgroundColor(Qt::red);
-//    }
-//    else   //0 is sucess
-//    {
-//       ui->tableWidget->setItem(3,2,new QTableWidgetItem("通过"));
-//       ui->tableWidget->item(3, 0)->setBackgroundColor(Qt::green);//faild red;//sucess green
-//       ui->tableWidget->item(3, 1)->setBackgroundColor(Qt::green);
-//       ui->tableWidget->item(3, 2)->setBackgroundColor(Qt::green);
-//    }
 }
 
 void MainWindow::on_TYPEC_Button_clicked()
@@ -603,22 +519,6 @@ void MainWindow::on_TYPEC_Button_clicked()
     const char *command = "sudo sh /opt/armsomtest/shell/typec.sh";
     TestThread * TypecThread = new TestThread(4,command,ui);
     TypecThread->start();
-//    int status =0;
-//    status = system("sudo sh /opt/armsomtest/shell/typec.sh");
-//    if(status)
-//    {
-//       ui->tableWidget->setItem(4,2,new QTableWidgetItem("不通过"));
-//       ui->tableWidget->item(4, 0)->setBackgroundColor(Qt::red);//faild red
-//       ui->tableWidget->item(4, 1)->setBackgroundColor(Qt::red);
-//       ui->tableWidget->item(4, 2)->setBackgroundColor(Qt::red);
-//    }
-//    else   //0 is sucess
-//    {
-//       ui->tableWidget->setItem(4,2,new QTableWidgetItem("通过"));WifiThread
-//       ui->tableWidget->item(4, 0)->setBackgroundColor(Qt::green);//faild red;//sucess green
-//       ui->tableWidget->item(4, 1)->setBackgroundColor(Qt::green);
-//       ui->tableWidget->item(4, 2)->setBackgroundColor(Qt::green);
-//    }
 }
 
 
@@ -627,23 +527,6 @@ void MainWindow::on_usb20_Button_clicked()
       const char *command = "sudo sh /opt/armsomtest/shell/usb2.sh";
       TestThread * Usb20Thread = new TestThread(5,command,ui);
       Usb20Thread->start();
-
-//    int status =0;
-//    status = system("sudo sh /opt/armsomtest/shell/usb2.sh");
-//    if(status)
-//    {
-//       ui->tableWidget->setItem(5,2,new QTableWidgetItem("不通过"));
-//       ui->tableWidget->item(5, 0)->setBackgroundColor(Qt::red);//faild red
-//       ui->tableWidget->item(5, 1)->setBackgroundColor(Qt::red);
-//       ui->tableWidget->item(5, 2)->setBackgroundColor(Qt::red);
-//    }
-//    else   //0 is sucess
-//    {
-//       ui->tableWidget->setItem(5,2,new QTableWidgetItem("通过"));
-//       ui->tableWidget->item(5, 0)->setBackgroundColor(Qt::green);//faild red;//sucess green
-//       ui->tableWidget->item(5, 1)->setBackgroundColor(Qt::green);
-//       ui->tableWidget->item(5, 2)->setBackgroundColor(Qt::green);
-//    }
 }
 
 void MainWindow::on_usb30Button_clicked()
@@ -651,23 +534,6 @@ void MainWindow::on_usb30Button_clicked()
       const char *command = "sudo sh /opt/armsomtest/shell/usb3.sh";
       TestThread * Usb30Thread = new TestThread(6,command,ui);
       Usb30Thread->start();
-
-//    int status =0;
-//    status = system("sudo sh /opt/armsomtest/shell/usb3.sh");
-//    if(status)
-//    {
-//       ui->tableWidget->setItem(6,2,new QTableWidgetItem("不通过"));
-//       ui->tableWidget->item(6, 0)->setBackgroundColor(Qt::red);//faild red
-//       ui->tableWidget->item(6, 1)->setBackgroundColor(Qt::red);
-//       ui->tableWidget->item(6, 2)->setBackgroundColor(Qt::red);
-//    }
-//    else   //0 is sucess
-//    {
-//       ui->tableWidget->setItem(6,2,new QTableWidgetItem("通过"));
-//       ui->tableWidget->item(6, 0)->setBackgroundColor(Qt::green);//faild red;//sucess green
-//       ui->tableWidget->item(6, 1)->setBackgroundColor(Qt::green);
-//       ui->tableWidget->item(6, 2)->setBackgroundColor(Qt::green);
-//    }
 }
 
 void MainWindow::on_tfcard_Button_clicked()
@@ -675,23 +541,6 @@ void MainWindow::on_tfcard_Button_clicked()
       const char *command = "sudo sh /opt/armsomtest/shell/tfcard.sh";
       TestThread * TfcardThread = new TestThread(7,command,ui);
       TfcardThread->start();
-
-//    int status =0;
-//    status = system("sudo sh /opt/armsomtest/shell/tfcard.sh");
-//    if(status)
-//    {
-//       ui->tableWidget->setItem(7,2,new QTableWidgetItem("不通过"));
-//       ui->tableWidget->item(7, 0)->setBackgroundColor(Qt::red);//faild red
-//       ui->tableWidget->item(7, 1)->setBackgroundColor(Qt::red);
-//       ui->tableWidget->item(7, 2)->setBackgroundColor(Qt::red);
-//    }
-//    else   //0 is sucess
-//    {
-//       ui->tableWidget->setItem(7,2,new QTableWidgetItem("通过"));
-//       ui->tableWidget->item(7, 0)->setBackgroundColor(Qt::green);//faild red;//sucess green
-//       ui->tableWidget->item(7, 1)->setBackgroundColor(Qt::green);
-//       ui->tableWidget->item(7, 2)->setBackgroundColor(Qt::green);
-//    }
 }
 
 void MainWindow::on_hdmiin_Button_clicked()
@@ -702,29 +551,10 @@ void MainWindow::on_hdmiin_Button_clicked()
 
       Hdmiin_pass_bt->setEnabled(true);
       Hdmiin_faild_bt->setEnabled(true);
-
-//    int status =0;
-//    status = system("sudo sh /opt/armsomtest/shell/hdmiin.sh");
-//    if(status)
-//    {
-//       ui->tableWidget->setItem(8,2,new QTableWidgetItem("不通过"));
-//       ui->tableWidget->item(8, 0)->setBackgroundColor(Qt::red);//faild red
-//       ui->tableWidget->item(8, 1)->setBackgroundColor(Qt::red);
-//       ui->tableWidget->item(8, 2)->setBackgroundColor(Qt::red);
-//    }
-//    else   //0 is sucess
-//    {
-//       ui->tableWidget->setItem(8,2,new QTableWidgetItem("通过"));
-//       ui->tableWidget->item(8, 0)->setBackgroundColor(Qt::green);//faild red;//sucess green
-//       ui->tableWidget->item(8, 1)->setBackgroundColor(Qt::green);
-//       ui->tableWidget->item(8, 2)->setBackgroundColor(Qt::green);
-//    }
 }
 
 void MainWindow::on_Audio_Button_clicked()
 {
-    //QProcess::execute("aplay -Dplughw:1,0 /audio.wav");
-
     const char *command = "sudo sh /opt/armsomtest/shell/audio.sh";
     TestThread * AudioThread = new TestThread(MANUAL_TESTING,command,ui);
     AudioThread->start();
@@ -763,9 +593,6 @@ void MainWindow::on_camera_stop_clicked()
 
 void MainWindow::on_PIN_Button_clicked()
 {
-//    int status =0;
-//   system("sudo sh /opt/armsomtest/shell/armsom-w3-gpio40.sh");
-
    const char *command = "sudo sh /opt/armsomtest/shell/armsom-w3-gpio40.sh";
    TestThread * PinThread = new TestThread(MANUAL_TESTING,command,ui);
    PinThread->start();
