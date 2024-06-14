@@ -1,0 +1,5 @@
+armsom-test (1.0.0) UNRELEASED; urgency=medium
+
+  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+
+ -- Jianfeng Liu <liujianfeng1994@gmail.com>  Fri, 14 Jun 2024 11:01:39 +0800

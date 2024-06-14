@@ -1,0 +1,13 @@
+Source: armsom-test
+Section: utils
+Priority: optional
+Maintainer: Jianfeng Liu <liujianfeng1994@gmail.com>
+Build-Depends: debhelper-compat (= 13), qtchooser, libopencv-dev, build-essential, qtbase5-dev
+Standards-Version: 4.6.0
+Homepage: https://www.armsom.org/
+Rules-Requires-Root: no
+
+Package: armsom-test
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Factory test for ArmSoM boards

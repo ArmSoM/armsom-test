@@ -1,0 +1,50 @@
+root@linaro-alip:~#
+root@linaro-alip:~#
+root@linaro-alip:~# lspci
+0000:00:00.0 PCI bridge: Fuzhou Rockchip Electronics Co., Ltd Device 3588 (rev 01)
+0000:01:00.0 Non-Volatile memory controller: Intel Corporation NVMe Optane Memory Series
+0002:20:00.0 PCI bridge: Fuzhou Rockchip Electronics Co., Ltd Device 3588 (rev 01)
+0002:21:00.0 Network controller: Realtek Semiconductor Co., Ltd. Device b852
+0004:40:00.0 PCI bridge: Fuzhou Rockchip Electronics Co., Ltd Device 3588 (rev 01)
+0004:41:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8125 2.5GbE Controller (rev 05)
+root@linaro-alip:~#
+root@linaro-alip:~#
+root@linaro-alip:~#
+root@linaro-alip:~#
+root@linaro-alip:~#
+root@linaro-alip:~#
+root@linaro-alip:~# ls /dev/nvme0*
+/dev/nvme0  /dev/nvme0n1
+root@linaro-alip:~#
+root@linaro-alip:~#
+root@linaro-alip:~#
+root@linaro-alip:~#
+root@linaro-alip:~#
+root@linaro-alip:~#
+root@linaro-alip:~# df -h
+文件系统        容量  已用  可用 已用% 挂载点
+/dev/root        14G  3.1G   11G   23% /
+devtmpfs        3.8G  8.0K  3.8G    1% /dev
+tmpfs           3.9G   18M  3.9G    1% /dev/shm
+tmpfs           1.6G  1.6M  1.6G    1% /run
+tmpfs           5.0M  4.0K  5.0M    1% /run/lock
+tmpfs           3.9G  208K  3.9G    1% /tmp
+/dev/mmcblk0p7  127M   12M  109M   10% /oem
+/dev/mmcblk0p8   15G   56K   14G    1% /userdata
+tmpfs           793M   28K  793M    1% /run/user/0
+tmpfs           793M   44K  793M    1% /run/user/1000
+root@linaro-alip:~#
+root@linaro-alip:~#
+root@linaro-alip:~#
+
+
+判断m2是否识别到：
+
+lspci
+
+PCI bridge: Fuzhou Rockchip Electronics Co., Ltd Device 3588 (rev 01)
+0000:01:00.0 Non-Volatile memory controller: Intel Corporation NVMe Optane Memory Series
+
+
+ls /dev/nvme0*
+/dev/nvme0  /dev/nvme0n1

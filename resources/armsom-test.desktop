@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=ArmSoM Test
+Exec=/usr/bin/armsom-test
+Icon=ArmSoM
+Comment=This is ArmSoM Test
+Terminal=true
