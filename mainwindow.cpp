@@ -178,28 +178,33 @@ void  MainWindow::initUI()
        {
            ui->tableWidget->item(i,0)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
        }
-       // 人工测试添加按钮
-       QPushButton *Hdmiin_pass_bt = new QPushButton(this);
-       Hdmiin_pass_bt->setText("通过");
-       connect(Hdmiin_pass_bt,SIGNAL(clicked()),this,SLOT(createEditwidget()));  // 添加  按钮 点击处理
+//       // 人工测试添加按钮
+//       QPushButton *Hdmiin_pass_bt = new QPushButton(this);
+//       Hdmiin_pass_bt->setText("通过");
+//       connect(Hdmiin_pass_bt,SIGNAL(clicked()),this,SLOT(createEditwidget()));  // 添加  按钮 点击处理
 
-       QWidget *horizontalLayoutWidget;
-       QHBoxLayout *horizontalLayout;
+//       QWidget *horizontalLayoutWidget;
+//       QHBoxLayout *horizontalLayout;
 
-       QWidget *wgb = new QWidget(this);
-       QHBoxLayout *verticalLayoutb = new QHBoxLayout(wgb);
-       verticalLayoutb->setContentsMargins(10,1,10,1);
-       verticalLayoutb->addWidget(Hdmiin_pass_bt);
-       ui->tableWidget->setCellWidget(9,1,wgb);
+//       QWidget *wgb = new QWidget(this);
+//       QHBoxLayout *verticalLayoutb = new QHBoxLayout(wgb);
+//       verticalLayoutb->setContentsMargins(10,1,10,1);
+//       verticalLayoutb->addWidget(Hdmiin_pass_bt);
+//       ui->tableWidget->setCellWidget(9,1,wgb);
 
-       // 人工测试添加按钮
-       QPushButton *Hdmiin_faild_bt = new QPushButton(this);
-       Hdmiin_faild_bt->setText("不通过");
-       connect(Hdmiin_faild_bt,SIGNAL(clicked()),this,SLOT(createEditwidget()));  // 添加  按钮 点击处理
+//       // 人工测试添加按钮
+//       QPushButton *Hdmiin_faild_bt = new QPushButton(this);
+//       Hdmiin_faild_bt->setText("不通过");
+//       connect(Hdmiin_faild_bt,SIGNAL(clicked()),this,SLOT(createEditwidget()));  // 添加  按钮 点击处理
 
-       verticalLayoutb->setContentsMargins(10,1,10,1);
-       verticalLayoutb->addWidget(Hdmiin_faild_bt);
-       ui->tableWidget->setCellWidget(9,2,wgb);
+////       QWidget *horizontalLayoutWidget;
+////       QHBoxLayout *horizontalLayout;
+
+//       //QWidget *wgb = new QWidget(this);
+//       //QHBoxLayout *verticalLayoutb = new QHBoxLayout(wgb);
+//       verticalLayoutb->setContentsMargins(10,1,10,1);
+//       verticalLayoutb->addWidget(Hdmiin_faild_bt);
+//       ui->tableWidget->setCellWidget(9,2,wgb);
 
 
        // 人工测试添加按钮
