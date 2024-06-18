@@ -1,5 +1,9 @@
-armsom-test (1.0.0) UNRELEASED; urgency=medium
+armsom-test (1.0.2) bookworm; urgency=medium
 
+  [ Jianfeng Liu ]
   * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
 
- -- Jianfeng Liu <liujianfeng1994@gmail.com>  Fri, 14 Jun 2024 11:01:39 +0800
+  [ Jianfeng ]
+  * Update to 1.0.2
+
+ -- Jianfeng <liujianfeng1994@gmail.com>  Tue, 18 Jun 2024 16:19:06 +0000
