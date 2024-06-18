@@ -1,6 +1,14 @@
 #!/bin/bash
 
-#gst-launch-1.0 v4l2src device=/dev/video11 ! video/x-raw,format=NV12,width=3840,height=2160, framerate=30/1 ! xvimagesink
-#gst-launch-1.0 v4l2src device=/dev/video11 ! video/x-raw,format=NV12,width=3840,height=2160, framerate=30/1 ! waylandsink
-gst-launch-1.0 v4l2src device=/dev/video-camera0 ! video/x-raw,format=NV12,width=3840,height=2160, framerate=30/1 ! waylandsink
+# 使用grep命令获取包含 "Detected OV00d850 sensor, REVISION 0xb2" 的行数
+count=$(dmesg | grep "13850" | grep -c "Detected OV00d850 sensor, REVISION 0xb2")
+
+# 判断count的值
+if [ ${count} -eq 2 ]; then
+    # 如果出现两次，返回0表示成功
+    exit 0
+else
+    # 如果不是两次，返回1表示失败
+    exit 1
+fi
 		

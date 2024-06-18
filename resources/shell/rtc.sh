@@ -16,13 +16,10 @@ case "$board_model" in
 		;;
 esac
 
-result=`dmesg | grep "unable to read the hardware clock" | wc -l`
-if [ ${result} -ne 0 ];then
-    exit 1
-fi
 
-result=`dmesg | grep "${rtc_string}" | wc -l`
-if [ ${result} -ne 0 ];then
+# 检测rtc是否有包含 "registered as rtc0" 的日志条目
+count=$(dmesg | grep "rtc-hym8563" | grep -c "registered as rtc0")
+if [ ${count} -gt 0 ];then
     exit 0
 else
     exit 1

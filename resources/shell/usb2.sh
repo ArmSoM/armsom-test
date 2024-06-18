@@ -16,8 +16,9 @@ case "$board_model" in
 		;;
 esac
 
-result=`dmesg | grep "new high-speed USB device" | wc -l`
-if [ ${result} -ge ${usb2_num} ];then
+# 检测是否有包含 "new low-speed USB device" 的日志条目
+count=$(dmesg | grep "usb 1-1.2" | grep -c "new low-speed USB device")
+if [ ${count} -gt 0 ];then
     exit 0
 else
     exit 1

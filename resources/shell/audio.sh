@@ -1,3 +1,3 @@
 #!/bin/bash
 
-aplay -Dplughw:1,0 /opt/armsomtest/audio.wav
+aplay -Dplughw:0,0 /opt/armsomtest/audio.wav

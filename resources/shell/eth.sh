@@ -11,11 +11,14 @@
 #     exit 0
 # fi
 
- HOST=8.8.8.8
-  log "Ping check : $HOST"
-  ping -c 4 "$HOST" > /dev/null
-  if [ $? -eq 0 ];then
+# 使用grep命令获取包含 "Detected OV00d850 sensor, REVISION 0xb2" 的行数
+count=$(dmesg | grep "gmac" | grep -c "Link is Up")
+
+# 判断count的值
+if [ ${count} -eq 2 ]; then
+    # 如果出现两次，返回0表示成功
     exit 0
-  else
+else
+    # 如果不是两次，返回1表示失败
     exit 1
-  fi
+fi
