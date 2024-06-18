@@ -30,11 +30,6 @@ MainWindow::MainWindow(QWidget *parent)
     ok = true;
 }
 
- void  MainWindow::cameraCapture()
- {
-     //camerathread->start();
- }
-
 MainWindow::~MainWindow()
 {  
     ui->tableWidget->clearContents();
@@ -47,6 +42,7 @@ MainWindow::~MainWindow()
     delete Usb30Thread;
     delete TfcardThread;
     delete RtcThread;
+    delete CameraThread;
     delete AudioThread;
     delete PinThread;
     //camerathread->requestInterruption();
@@ -154,15 +150,15 @@ void  MainWindow::initUI()
        ui->tableWidget->setItem(8,2,new QTableWidgetItem("自动测试"));
        ui->tableWidget->setItem(8,3,new QTableWidgetItem(""));
        ui->tableWidget->setItem(9,0,new QTableWidgetItem("9"));
-       ui->tableWidget->setItem(9,1,new QTableWidgetItem("音频测试"));
-       ui->tableWidget->setItem(9,2,new QTableWidgetItem("人工测试"));
+       ui->tableWidget->setItem(9,1,new QTableWidgetItem("Camera测试"));
+       ui->tableWidget->setItem(9,2,new QTableWidgetItem("自动测试"));
        ui->tableWidget->setItem(9,3,new QTableWidgetItem(""));
        ui->tableWidget->setItem(10,0,new QTableWidgetItem("10"));
-       ui->tableWidget->setItem(10,1,new QTableWidgetItem("MIPI屏测试"));
+       ui->tableWidget->setItem(10,1,new QTableWidgetItem("音频测试"));
        ui->tableWidget->setItem(10,2,new QTableWidgetItem("人工测试"));
        ui->tableWidget->setItem(10,3,new QTableWidgetItem(""));
        ui->tableWidget->setItem(11,0,new QTableWidgetItem("11"));
-       ui->tableWidget->setItem(11,1,new QTableWidgetItem("Camera测试"));
+       ui->tableWidget->setItem(11,1,new QTableWidgetItem("MIPI屏测试"));
        ui->tableWidget->setItem(11,2,new QTableWidgetItem("人工测试"));
        ui->tableWidget->setItem(11,3,new QTableWidgetItem(""));
        ui->tableWidget->setItem(12,0,new QTableWidgetItem("12"));
@@ -178,36 +174,36 @@ void  MainWindow::initUI()
        {
            ui->tableWidget->item(i,0)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
        }
-//       // 人工测试添加按钮
-//       QPushButton *Hdmiin_pass_bt = new QPushButton(this);
-//       Hdmiin_pass_bt->setText("通过");
-//       connect(Hdmiin_pass_bt,SIGNAL(clicked()),this,SLOT(createEditwidget()));  // 添加  按钮 点击处理
-
-//       QWidget *horizontalLayoutWidget;
-//       QHBoxLayout *horizontalLayout;
-
-//       QWidget *wgb = new QWidget(this);
-//       QHBoxLayout *verticalLayoutb = new QHBoxLayout(wgb);
-//       verticalLayoutb->setContentsMargins(10,1,10,1);
-//       verticalLayoutb->addWidget(Hdmiin_pass_bt);
-//       ui->tableWidget->setCellWidget(9,1,wgb);
-
-//       // 人工测试添加按钮
-//       QPushButton *Hdmiin_faild_bt = new QPushButton(this);
-//       Hdmiin_faild_bt->setText("不通过");
-//       connect(Hdmiin_faild_bt,SIGNAL(clicked()),this,SLOT(createEditwidget()));  // 添加  按钮 点击处理
-
-////       QWidget *horizontalLayoutWidget;
-////       QHBoxLayout *horizontalLayout;
-
-//       //QWidget *wgb = new QWidget(this);
-//       //QHBoxLayout *verticalLayoutb = new QHBoxLayout(wgb);
-//       verticalLayoutb->setContentsMargins(10,1,10,1);
-//       verticalLayoutb->addWidget(Hdmiin_faild_bt);
-//       ui->tableWidget->setCellWidget(9,2,wgb);
-
 
        // 人工测试添加按钮
+       //Audio
+       Audio_pass_bt = new QPushButton(this);
+       Audio_pass_bt->setText("通过");
+       Audio_pass_bt->setEnabled(false);
+       connect(Audio_pass_bt,SIGNAL(clicked()),this,SLOT(on_audiopass_clicked()));  // 添加  按钮 点击处理
+       ui->tableWidget->setCellWidget(10,2,Audio_pass_bt);
+
+
+       Audio_faild_bt = new QPushButton(this);
+       Audio_faild_bt->setText("不通过");
+       Audio_faild_bt->setEnabled(false);
+       connect(Audio_faild_bt,SIGNAL(clicked()),this,SLOT(on_audiofaild_clicked()));  // 添加  按钮 点击处理
+       ui->tableWidget->setCellWidget(10,3,Audio_faild_bt);
+
+       //MIPI-DSI
+       Mipi_pass_bt = new QPushButton(this);
+       Mipi_pass_bt->setText("通过");
+       Mipi_pass_bt->setEnabled(false);
+       connect(Mipi_pass_bt,SIGNAL(clicked()),this,SLOT(on_mipipass_clicked()));  // 添加  按钮 点击处理
+       ui->tableWidget->setCellWidget(11,2,Mipi_pass_bt);
+
+
+       Mipi_faild_bt = new QPushButton(this);
+       Mipi_faild_bt->setText("不通过");
+       Mipi_faild_bt->setEnabled(false);
+       connect(Mipi_faild_bt,SIGNAL(clicked()),this,SLOT(on_mipifaild_clicked()));  // 添加  按钮 点击处理
+       ui->tableWidget->setCellWidget(11,3,Mipi_faild_bt);
+
        //Hdmiin
        Hdmiin_pass_bt = new QPushButton(this);
        Hdmiin_pass_bt->setText("通过");
@@ -221,48 +217,6 @@ void  MainWindow::initUI()
        Hdmiin_faild_bt->setEnabled(false);
        connect(Hdmiin_faild_bt,SIGNAL(clicked()),this,SLOT(on_hdmiinfaild_clicked()));  // 添加  按钮 点击处理
        ui->tableWidget->setCellWidget(12,3,Hdmiin_faild_bt);
-
-       //Camera
-       Camera_pass_bt = new QPushButton(this);
-       Camera_pass_bt->setText("通过");
-       Camera_pass_bt->setEnabled(false);
-       connect(Camera_pass_bt,SIGNAL(clicked()),this,SLOT(on_camerapass_clicked()));  // 添加  按钮 点击处理
-       ui->tableWidget->setCellWidget(11,2,Camera_pass_bt);
-
-
-       Camera_faild_bt = new QPushButton(this);
-       Camera_faild_bt->setText("不通过");
-       Camera_faild_bt->setEnabled(false);
-       connect(Camera_faild_bt,SIGNAL(clicked()),this,SLOT(on_camerafaild_clicked()));  // 添加  按钮 点击处理
-       ui->tableWidget->setCellWidget(11,3,Camera_faild_bt);
-
-       //Audio
-       Audio_pass_bt = new QPushButton(this);
-       Audio_pass_bt->setText("通过");
-       Audio_pass_bt->setEnabled(false);
-       connect(Audio_pass_bt,SIGNAL(clicked()),this,SLOT(on_audiopass_clicked()));  // 添加  按钮 点击处理
-       ui->tableWidget->setCellWidget(9,2,Audio_pass_bt);
-
-
-       Audio_faild_bt = new QPushButton(this);
-       Audio_faild_bt->setText("不通过");
-       Audio_faild_bt->setEnabled(false);
-       connect(Audio_faild_bt,SIGNAL(clicked()),this,SLOT(on_audiofaild_clicked()));  // 添加  按钮 点击处理
-       ui->tableWidget->setCellWidget(9,3,Audio_faild_bt);
-
-       //MIPI-DSI
-       Mipi_pass_bt = new QPushButton(this);
-       Mipi_pass_bt->setText("通过");
-       Mipi_pass_bt->setEnabled(false);
-       connect(Mipi_pass_bt,SIGNAL(clicked()),this,SLOT(on_mipipass_clicked()));  // 添加  按钮 点击处理
-       ui->tableWidget->setCellWidget(10,2,Mipi_pass_bt);
-
-
-       Mipi_faild_bt = new QPushButton(this);
-       Mipi_faild_bt->setText("不通过");
-       Mipi_faild_bt->setEnabled(false);
-       connect(Mipi_faild_bt,SIGNAL(clicked()),this,SLOT(on_mipifaild_clicked()));  // 添加  按钮 点击处理
-       ui->tableWidget->setCellWidget(10,3,Mipi_faild_bt);
 
        //40PIN
        Pin_pass_bt = new QPushButton(this);
@@ -305,6 +259,46 @@ void MainWindow::on_pass_clicked(int item,QString string)
 
 }
 
+void MainWindow::on_audiopass_clicked()
+{
+    Audio_pass_bt->setVisible(false);
+    Audio_pass_bt->setEnabled(false);
+    Audio_faild_bt->setVisible(false);
+    Audio_faild_bt->setEnabled(false);
+    QString string = "通过";
+    on_pass_clicked(10,string);
+}
+
+void MainWindow::on_audiofaild_clicked()
+{
+    Audio_pass_bt->setVisible(false);
+    Audio_pass_bt->setEnabled(false);
+    Audio_faild_bt->setVisible(false);
+    Audio_faild_bt->setEnabled(false);
+    QString string = "不通过";
+    on_pass_clicked(10,string);
+}
+
+void MainWindow::on_mipipass_clicked()
+{
+    Mipi_pass_bt->setVisible(false);
+    Mipi_pass_bt->setEnabled(false);
+    Mipi_faild_bt->setVisible(false);
+    Mipi_faild_bt->setEnabled(false);
+    QString string = "通过";
+    on_pass_clicked(11,string);
+}
+
+void MainWindow::on_mipifaild_clicked()
+{
+    Mipi_pass_bt->setVisible(false);
+    Mipi_pass_bt->setEnabled(false);
+    Mipi_faild_bt->setVisible(false);
+    Mipi_faild_bt->setEnabled(false);
+    QString string = "不通过";
+    on_pass_clicked(11,string);
+}
+
 void MainWindow::on_hdmiinpass_clicked()
 {
     //Hdmiin_pass_bt->setStyleSheet("background-color:rgb(0,255,0)");  //button set color
@@ -324,66 +318,6 @@ void MainWindow::on_hdmiinfaild_clicked()
     Hdmiin_faild_bt->setEnabled(false);
     QString string = "不通过";
     on_pass_clicked(12,string);
-}
-
-void MainWindow::on_camerapass_clicked()
-{
-    Camera_pass_bt->setVisible(false);
-    Camera_pass_bt->setEnabled(false);
-    Camera_faild_bt->setVisible(false);
-    Camera_faild_bt->setEnabled(false);
-    QString string = "通过";
-    on_pass_clicked(11,string);
-}
-
-void MainWindow::on_camerafaild_clicked()
-{
-    Camera_pass_bt->setVisible(false);
-    Camera_pass_bt->setEnabled(false);
-    Camera_faild_bt->setVisible(false);
-    Camera_faild_bt->setEnabled(false);
-    QString string = "不通过";
-    on_pass_clicked(11,string);
-}
-
-void MainWindow::on_audiopass_clicked()
-{
-    Audio_pass_bt->setVisible(false);
-    Audio_pass_bt->setEnabled(false);
-    Audio_faild_bt->setVisible(false);
-    Audio_faild_bt->setEnabled(false);
-    QString string = "通过";
-    on_pass_clicked(9,string);
-}
-
-void MainWindow::on_audiofaild_clicked()
-{
-    Audio_pass_bt->setVisible(false);
-    Audio_pass_bt->setEnabled(false);
-    Audio_faild_bt->setVisible(false);
-    Audio_faild_bt->setEnabled(false);
-    QString string = "不通过";
-    on_pass_clicked(9,string);
-}
-
-void MainWindow::on_mipipass_clicked()
-{
-    Mipi_pass_bt->setVisible(false);
-    Mipi_pass_bt->setEnabled(false);
-    Mipi_faild_bt->setVisible(false);
-    Mipi_faild_bt->setEnabled(false);
-    QString string = "通过";
-    on_pass_clicked(10,string);
-}
-
-void MainWindow::on_mipifaild_clicked()
-{
-    Mipi_pass_bt->setVisible(false);
-    Mipi_pass_bt->setEnabled(false);
-    Mipi_faild_bt->setVisible(false);
-    Mipi_faild_bt->setEnabled(false);
-    QString string = "不通过";
-    on_pass_clicked(10,string);
 }
 
 void MainWindow::on_pinpass_clicked()
@@ -416,14 +350,12 @@ void MainWindow::on_TestButton_clicked()
     //camerathread = new CameraThread(0,string,ui,this);
 
 
-    Hdmiin_pass_bt->setEnabled(true);
-    Hdmiin_faild_bt->setEnabled(true);
-    Camera_pass_bt->setEnabled(true);
-    Camera_faild_bt->setEnabled(true);
     Audio_pass_bt->setEnabled(true);
     Audio_faild_bt->setEnabled(true);
     Mipi_pass_bt->setEnabled(true);
     Mipi_faild_bt->setEnabled(true);
+    Hdmiin_pass_bt->setEnabled(true);
+    Hdmiin_faild_bt->setEnabled(true);
     Pin_pass_bt->setEnabled(true);
     Pin_faild_bt->setEnabled(true);
 
@@ -462,6 +394,10 @@ void MainWindow::on_TestButton_clicked()
     command = "sudo sh /opt/armsomtest/shell/rtc.sh";
     RtcThread = new TestThread(6,command,ui,this);
     RtcThread->start();
+
+    command = "sudo sh /opt/armsomtest/shell/camera.sh";
+    CameraThread = new TestThread(9,command,ui,this);
+    CameraThread->start();
 
     if(ok)timer->start(33);
     else timer->stop();
@@ -563,34 +499,6 @@ void MainWindow::on_Audio_Button_clicked()
     Audio_faild_bt->setEnabled(true);
 }
 
-void MainWindow::on_Camera_Button_clicked()
-{
-    //QProcess::execute("gst-launch-1.0 v4l2src device=/dev/video11 ! video/x-raw,format=NV12,width=3840,height=2160, framerate=30/1 ! xvimagesink");
-
-//    const char *command = "sudo sh /opt/armsomtest/shell/camera.sh";
-//    TestThread * CameraThread = new TestThread(MANUAL_TESTING,command,ui);
-//    CameraThread->start();
-
-//    Camera_pass_bt->setEnabled(true);
-//    Camera_faild_bt->setEnabled(true);
-
-//      const char *command = "sudo sh /opt/armsomtest/shell/camera.sh";
-//      CameraThread * CameraCaptureThread = new CameraThread(MANUAL_TESTING,command,ui);
-      //CameraCaptureThread->start();
-    //camerathread->start();
-
-    if(ok)timer->start(33);
-    else timer->stop();
-    ok = !ok;
-}
-
-void MainWindow::on_camera_stop_clicked()
-{
-     timer->stop();         // 停止读取数据。
-     camerathread->requestInterruption();
-     camerathread->wait();
-}
-
 void MainWindow::on_PIN_Button_clicked()
 {
    const char *command = "sudo sh /opt/armsomtest/shell/armsom-w3-gpio40.sh";
@@ -599,12 +507,4 @@ void MainWindow::on_PIN_Button_clicked()
 
    Pin_pass_bt->setEnabled(true);
    Pin_faild_bt->setEnabled(true);
-}
-
-void MainWindow::on_CameraButton_clicked()
-{
-    ui->CameraButton->setEnabled(false);
-    CameraWindow *Camerashow = new CameraWindow(this);
-    Camerashow->show();
-    Camerashow->setWindowTitle("Camera");
 }

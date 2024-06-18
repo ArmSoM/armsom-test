@@ -60,10 +60,6 @@ private slots:
 
     void on_hdmiinfaild_clicked();
 
-    void on_camerapass_clicked();
-
-    void on_camerafaild_clicked();
-
     void on_audiopass_clicked();
 
     void on_audiofaild_clicked();
@@ -103,15 +99,6 @@ private slots:
 
     void on_Audio_Button_clicked();
 
-    void on_Camera_Button_clicked();
-
-    void cameraCapture();
-
-     void on_camera_stop_clicked();
-
-
-     void on_CameraButton_clicked();
-
 private:
     Ui::MainWindow *ui;
     TestThread *testthread;
@@ -124,10 +111,9 @@ private:
     TestThread * Usb30Thread;
     TestThread * TfcardThread;
     TestThread * RtcThread;
+    TestThread * CameraThread;
     TestThread * AudioThread;
     TestThread * PinThread;
-
-    CameraThread *camerathread;
 
     QTimer *timer;
     bool ok;
