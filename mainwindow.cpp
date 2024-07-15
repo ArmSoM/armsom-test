@@ -118,7 +118,7 @@ void  MainWindow::initUI()
        ui->tableWidget->setItem(0,2,new QTableWidgetItem("自动测试"));
        ui->tableWidget->setItem(0,3,new QTableWidgetItem(""));
        ui->tableWidget->setItem(1,0,new QTableWidgetItem("2"));
-       //ui->tableWidget->setItem(1,1,new QTableWidgetItem("Type-C测试"));
+       ui->tableWidget->setItem(1,1,new QTableWidgetItem("Type-C测试"));
        ui->tableWidget->setItem(1,2,new QTableWidgetItem("自动测试"));
        ui->tableWidget->setItem(1,3,new QTableWidgetItem(""));
        ui->tableWidget->setItem(2,0,new QTableWidgetItem("3"));
@@ -150,7 +150,7 @@ void  MainWindow::initUI()
        ui->tableWidget->setItem(8,2,new QTableWidgetItem("自动测试"));
        ui->tableWidget->setItem(8,3,new QTableWidgetItem(""));
        ui->tableWidget->setItem(9,0,new QTableWidgetItem("9"));
-       //ui->tableWidget->setItem(9,1,new QTableWidgetItem("Camera测试"));
+       ui->tableWidget->setItem(9,1,new QTableWidgetItem("Camera测试"));
        ui->tableWidget->setItem(9,2,new QTableWidgetItem("自动测试"));
        ui->tableWidget->setItem(9,3,new QTableWidgetItem(""));
        ui->tableWidget->setItem(10,0,new QTableWidgetItem("10"));

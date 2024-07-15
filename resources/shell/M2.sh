@@ -5,11 +5,11 @@ find_output=$(find /sys/bus/sdio/devices/*)
 
 # 检查 find 命令的输出是否为空
 if [ -z "$find_output" ]; then
-    return 1
     echo "failed"
+    exit 1
 else   
     # 遍历每个设备路径
-    for dev_path in $find_output; do
+    for dev_path in $find_output; dovi 
         uevent_file="$dev_path/uevent"
         
         # 检查 uevent 文件是否存在并读取内容
@@ -28,5 +28,5 @@ else
     done
     
     echo "$return_code"
-    return "$return_code"
+    exit "$return_code"
 fi
