@@ -12,7 +12,7 @@
 # fi
 
 # 使用grep命令获取包含 "Detected OV00d850 sensor, REVISION 0xb2" 的行数
-count=$(dmesg | grep -c "Link is Up")
+count=$(dmesg | grep "gmac" | grep -c "Link is Up")
 
 # 判断count的值
 if [ ${count} -eq 2 ]; then

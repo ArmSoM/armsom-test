@@ -91,7 +91,7 @@ private slots:
 
     void on_usb20_Button_clicked();
 
-    void on_usb20_1_Button_clicked();
+    void on_usb30Button_clicked();
 
     void on_tfcard_Button_clicked();
 
@@ -108,7 +108,7 @@ private:
     TestThread * M2Thread;
     TestThread * TypecThread;
     TestThread * Usb20Thread;
-    TestThread * Usb20_1Thread;
+    TestThread * Usb30Thread;
     TestThread * TfcardThread;
     TestThread * RtcThread;
     TestThread * CameraThread;

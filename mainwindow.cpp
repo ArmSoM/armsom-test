@@ -7,7 +7,7 @@
 #include <iostream>
 
 #include <QtWidgets/QHBoxLayout>
-#include<QTableWidget>
+#include<QTableWidget>>
 #include<QTableWidgetItem>
 
 #include <QProcess>
@@ -39,7 +39,7 @@ MainWindow::~MainWindow()
     delete M2Thread;
     delete TypecThread;
     delete Usb20Thread;
-    delete Usb20_1Thread;
+    delete Usb30Thread;
     delete TfcardThread;
     delete RtcThread;
     delete CameraThread;
@@ -114,7 +114,7 @@ void  MainWindow::initUI()
        //设置表格中每一行的内容
        ui->tableWidget->setItem(0,0,new QTableWidgetItem("1"));
        //ui->tableWidget->item(0,0)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-       ui->tableWidget->setItem(0,1,new QTableWidgetItem("usb2-1测试"));
+       ui->tableWidget->setItem(0,1,new QTableWidgetItem("USB3.0测试"));
        ui->tableWidget->setItem(0,2,new QTableWidgetItem("自动测试"));
        ui->tableWidget->setItem(0,3,new QTableWidgetItem(""));
        ui->tableWidget->setItem(1,0,new QTableWidgetItem("2"));
@@ -145,10 +145,10 @@ void  MainWindow::initUI()
        ui->tableWidget->setItem(7,1,new QTableWidgetItem("TFCARD测试"));
        ui->tableWidget->setItem(7,2,new QTableWidgetItem("自动测试"));
        ui->tableWidget->setItem(7,3,new QTableWidgetItem(""));
-    //    ui->tableWidget->setItem(8,0,new QTableWidgetItem("8"));
-    //    ui->tableWidget->setItem(8,1,new QTableWidgetItem("ap6275测试"));
-    //    ui->tableWidget->setItem(8,2,new QTableWidgetItem("自动测试"));
-    //    ui->tableWidget->setItem(8,3,new QTableWidgetItem(""));
+       ui->tableWidget->setItem(8,0,new QTableWidgetItem("8"));
+       ui->tableWidget->setItem(8,1,new QTableWidgetItem("ap6275测试"));
+       ui->tableWidget->setItem(8,2,new QTableWidgetItem("自动测试"));
+       ui->tableWidget->setItem(8,3,new QTableWidgetItem(""));
        ui->tableWidget->setItem(9,0,new QTableWidgetItem("9"));
        ui->tableWidget->setItem(9,1,new QTableWidgetItem("Camera测试"));
        ui->tableWidget->setItem(9,2,new QTableWidgetItem("自动测试"));
@@ -157,14 +157,14 @@ void  MainWindow::initUI()
        ui->tableWidget->setItem(10,1,new QTableWidgetItem("音频测试"));
        ui->tableWidget->setItem(10,2,new QTableWidgetItem("人工测试"));
        ui->tableWidget->setItem(10,3,new QTableWidgetItem(""));
-    //    ui->tableWidget->setItem(11,0,new QTableWidgetItem("11"));
-    //    ui->tableWidget->setItem(11,1,new QTableWidgetItem("MIPI屏测试"));
-    //    ui->tableWidget->setItem(11,2,new QTableWidgetItem("人工测试"));
-    //    ui->tableWidget->setItem(11,3,new QTableWidgetItem(""));
-    //    ui->tableWidget->setItem(12,0,new QTableWidgetItem("12"));
-    //    ui->tableWidget->setItem(12,1,new QTableWidgetItem("HDMIIN测试"));
-    //    ui->tableWidget->setItem(12,2,new QTableWidgetItem("人工测试"));
-    //    ui->tableWidget->setItem(12,3,new QTableWidgetItem(""));
+       ui->tableWidget->setItem(11,0,new QTableWidgetItem("11"));
+       ui->tableWidget->setItem(11,1,new QTableWidgetItem("MIPI屏测试"));
+       ui->tableWidget->setItem(11,2,new QTableWidgetItem("人工测试"));
+       ui->tableWidget->setItem(11,3,new QTableWidgetItem(""));
+       ui->tableWidget->setItem(12,0,new QTableWidgetItem("12"));
+       ui->tableWidget->setItem(12,1,new QTableWidgetItem("HDMIIN测试"));
+       ui->tableWidget->setItem(12,2,new QTableWidgetItem("人工测试"));
+       ui->tableWidget->setItem(12,3,new QTableWidgetItem(""));
        ui->tableWidget->setItem(13,0,new QTableWidgetItem("13"));
        ui->tableWidget->setItem(13,1,new QTableWidgetItem("40PIN测试"));
        ui->tableWidget->setItem(13,2,new QTableWidgetItem("人工测试"));
@@ -383,9 +383,9 @@ void MainWindow::on_TestButton_clicked()
     Usb20Thread = new TestThread(2,command,ui,this);
     Usb20Thread->start();
 
-    command = "sudo sh /opt/armsomtest/shell/usb2_1.sh";
-    Usb20_1Thread = new TestThread(0,command,ui,this);
-    Usb20_1Thread->start();
+    command = "sudo sh /opt/armsomtest/shell/usb3.sh";
+    Usb30Thread = new TestThread(0,command,ui,this);
+    Usb30Thread->start();
 
     command = "sudo sh /opt/armsomtest/shell/tfcard.sh";
     TfcardThread = new TestThread(7,command,ui,this);
@@ -465,11 +465,11 @@ void MainWindow::on_usb20_Button_clicked()
       Usb20Thread->start();
 }
 
-void MainWindow::on_usb20_1_Button_clicked()
+void MainWindow::on_usb30Button_clicked()
 {
-      const char *command = "sudo sh /opt/armsomtest/shell/usb2_1.sh";
-      TestThread * Usb20_1Thread = new TestThread(6,command,ui);
-      Usb20_1Thread->start();
+      const char *command = "sudo sh /opt/armsomtest/shell/usb3.sh";
+      TestThread * Usb30Thread = new TestThread(6,command,ui);
+      Usb30Thread->start();
 }
 
 void MainWindow::on_tfcard_Button_clicked()
