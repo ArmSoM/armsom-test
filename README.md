@@ -3,7 +3,14 @@
 ```
 sudo apt install debhelper qtchooser libopencv-dev build-essential qtmultimedia5-dev
 ```
-2, 构建deb
+
+2, 编译
+```
+mkdir build && cd build && qmake ../armsom-test.pro && make
+cd build && rm -rf * && qmake ../armsom-test.pro && make -j4
+```
+
+3, 构建deb
 ```
 dpkg-buildpackage -us -uc
 
@@ -13,3 +20,7 @@ DEB_BUILD_OPTIONS=parallel=1 dpkg-buildpackage -us -uc
 
 ```
 
+4, 卸载deb
+```
+apt remove armsom-test
+```
