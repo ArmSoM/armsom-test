@@ -4,7 +4,7 @@
 count=$(dmesg | grep "13850" | grep -c "Detected OV00d850 sensor, REVISION 0xb2")
 
 # 判断count的值
-if [ ${count} -eq 2 ]; then
+if [ ${count} -eq 1 ]; then
     # 如果出现两次，返回0表示成功
     exit 0
 else

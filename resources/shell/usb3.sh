@@ -18,8 +18,8 @@ case "$board_model" in
 		;;
 esac
 # 检测是否有包含 "new low-speed USB device" 的日志条目
-count=$(dmesg | grep "usb 1-1.1" | grep -c "new low-speed USB device")
-if [ ${count} -gt 0 ];then
+count=$(dmesg | grep "new low-speed USB device" | wc -l)
+if [ "$count" -eq 4 ]; then
     exit 0
 else
     exit 1
