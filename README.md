@@ -24,3 +24,7 @@ DEB_BUILD_OPTIONS=parallel=1 dpkg-buildpackage -us -uc
 ```
 apt remove armsom-test
 ```
+
+要是QT应用打不开的话是因为找不到X11环境，需要更新应用libqt5gui5_5.15.8+dfsg-11+gles_arm64.deb
+https://cdn.haguro.top/share/qt-gles-debs.tar
+
