@@ -122,7 +122,7 @@ void  MainWindow::initUI()
        ui->tableWidget->setItem(1,2,new QTableWidgetItem("自动测试"));
        ui->tableWidget->setItem(1,3,new QTableWidgetItem(""));
        ui->tableWidget->setItem(2,0,new QTableWidgetItem("3"));
-       ui->tableWidget->setItem(2,1,new QTableWidgetItem("USB2.0测试"));
+       ui->tableWidget->setItem(2,1,new QTableWidgetItem("imx219测试"));
        ui->tableWidget->setItem(2,2,new QTableWidgetItem("自动测试"));
        ui->tableWidget->setItem(2,3,new QTableWidgetItem(""));
        ui->tableWidget->setItem(3,0,new QTableWidgetItem("4"));
