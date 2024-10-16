@@ -146,7 +146,7 @@ void  MainWindow::initUI()
        ui->tableWidget->setItem(7,2,new QTableWidgetItem("自动测试"));
        ui->tableWidget->setItem(7,3,new QTableWidgetItem(""));
        ui->tableWidget->setItem(8,0,new QTableWidgetItem("8"));
-       ui->tableWidget->setItem(8,1,new QTableWidgetItem("ap6275测试"));
+       ui->tableWidget->setItem(8,1,new QTableWidgetItem("M.2接口测试"));
        ui->tableWidget->setItem(8,2,new QTableWidgetItem("自动测试"));
        ui->tableWidget->setItem(8,3,new QTableWidgetItem(""));
        ui->tableWidget->setItem(9,0,new QTableWidgetItem("9"));
