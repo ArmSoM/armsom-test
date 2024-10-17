@@ -24,7 +24,7 @@ esac
 #     exit 1
 # fi
 # 使用grep命令获取包含 "Detected OV00d850 sensor, REVISION 0xb2" 的行数
-count=$(dmesg | grep "imx219" | grep -c "Chip ID 0x0314")
+count=$(dmesg | grep "imx219" | grep -c "Chip ID 0x0314\|Chip ID 0x059e")
 
 # 判断count的值
 if [ ${count} -eq 1 ]; then
