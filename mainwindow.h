@@ -82,7 +82,6 @@ private slots:
 
     void on_BT_Button_clicked();
 
-
     void on_M2_Button_clicked();
 
     void on_TYPEC_Button_clicked();

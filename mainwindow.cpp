@@ -226,7 +226,7 @@ void MainWindow::on_TYPEC_Button_clicked()
     TypecThread->start();
 }
 
-void MainWindow::on_usbButton_clicked()
+void MainWindow::on_usb_Button_clicked()
 {
     const char *command = "sudo sh /opt/armsomtest/shell/usb.sh";
     TestThread * UsbThread = new TestThread(6, command, ui);
