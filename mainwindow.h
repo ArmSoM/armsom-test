@@ -74,8 +74,6 @@ private slots:
 
     void on_TestButton_clicked();
 
-    void on_gpio_Button_clicked();
-
     void on_typec_Button_clicked();
 
     void on_usb_Button_clicked();
