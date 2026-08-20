@@ -107,8 +107,7 @@ private:
     TestThread * Ethhread;
     TestThread * M2Thread;
     TestThread * TypecThread;
-    TestThread * Usb20Thread;
-    TestThread * Usb30Thread;
+    TestThread * UsbThread;
     TestThread * TfcardThread;
     TestThread * RtcThread;
     TestThread * CameraThread;
