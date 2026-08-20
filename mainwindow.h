@@ -68,25 +68,15 @@ private slots:
 
     void on_mipifaild_clicked();
 
-    void on_pinpass_clicked();
+    void on_gpiopass_clicked();
 
-    void on_pinfaild_clicked();
+    void on_gpiofaild_clicked();
 
     void on_TestButton_clicked();
 
-    void on_pass_Button_clicked();
+    void on_gpio_Button_clicked();
 
-    void on_PIN_Button_clicked();
-
-    void on_WIFI_Button_clicked();
-
-    void on_BT_Button_clicked();
-
-    void on_M2_Button_clicked();
-
-    void on_TYPEC_Button_clicked();
-
-    void on_eth_Button_clicked();
+    void on_typec_Button_clicked();
 
     void on_usb_Button_clicked();
 

@@ -219,11 +219,11 @@ void MainWindow::on_TestButton_clicked()
 }
 
 // 单项手动测试按钮触发槽函数
-void MainWindow::on_TYPEC_Button_clicked()
+void MainWindow::on_typec_Button_clicked()
 {
     const char *command = "sudo sh /opt/armsomtest/shell/typec.sh";
-    TestThread * TypecThread = new TestThread(4, command, ui);
-    TypecThread->start();
+    TestThread * typecThread = new TestThread(4, command, ui);
+    typecThread->start();
 }
 
 void MainWindow::on_usb_Button_clicked()
@@ -254,12 +254,21 @@ void MainWindow::on_Audio_Button_clicked()
     AudioThread->start();
 }
 
-void MainWindow::on_PIN_Button_clicked()
+void MainWindow::on_gpio_Button_clicked()
 {
-    const char *command = "sudo sh /opt/armsomtest/shell/armsom-w3-gpio40.sh";
-    TestThread * PinThread = new TestThread(MANUAL_TESTING, command, ui);
-    PinThread->start();
+    const char *command = "sudo sh /opt/armsomtest/shell/gpio.sh";
+    TestThread * gpioThread = new TestThread(MANUAL_TESTING, command, ui);
+    gpioThread->start();
 }
+
+void MainWindow::on_hdmiinfaild_clicked() {}
+void MainWindow::on_audiopass_clicked() {}
+void MainWindow::on_hdmiinpass_clicked() {}
+void MainWindow::on_audiofaild_clicked() {}
+void MainWindow::on_mipipass_clicked() {}
+void MainWindow::on_mipifaild_clicked() {}
+void MainWindow::on_gpiopass_clicked() {}
+void MainWindow::on_gpiofaild_clicked() {}
 
 // --- 板卡型号获取与配置 ---
 int getBoardCondition()
@@ -314,7 +323,7 @@ QList<TestItem> getTestListByBoard(int condition)
                 {"音频测试",      MANUAL_TEST, SLOT(on_audiopass_clicked()),   SLOT(on_audiofaild_clicked())},
                 {"MIPI屏测试",    MANUAL_TEST, SLOT(on_mipipass_clicked()),    SLOT(on_mipifaild_clicked())},
                 {"HDMIIN测试",    MANUAL_TEST, SLOT(on_hdmiinpass_clicked()),  SLOT(on_hdmiinfaild_clicked())},
-                {"40PIN测试",     MANUAL_TEST, SLOT(on_pinpass_clicked()),     SLOT(on_pinfaild_clicked())}
+                {"40PIN测试",     MANUAL_TEST, SLOT(on_gpiopass_clicked()),     SLOT(on_gpiofaild_clicked())}
             };
             break;
 
@@ -327,7 +336,7 @@ QList<TestItem> getTestListByBoard(int condition)
                 {"RTC测试",       AUTO_TEST,   nullptr, nullptr},
                 {"TFCARD测试",    AUTO_TEST,   nullptr, nullptr},
                 {"音频测试",      MANUAL_TEST, SLOT(on_audiopass_clicked()),   SLOT(on_audiofaild_clicked())},
-                {"40PIN测试",     MANUAL_TEST, SLOT(on_pinpass_clicked()),     SLOT(on_pinfaild_clicked())}
+                {"40PIN测试",     MANUAL_TEST, SLOT(on_gpiopass_clicked()),     SLOT(on_gpiofaild_clicked())}
             };
             break;
 
