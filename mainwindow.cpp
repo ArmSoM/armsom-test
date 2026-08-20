@@ -159,7 +159,7 @@ void MainWindow::on_pass_clicked(int item, QString string)
     ui->tableWidget->setItem(item, 3, new QTableWidgetItem(string));
     for (int col = 0; col < 4; ++col) {
         if (ui->tableWidget->item(item, col)) {
-            ui->tableWidget->item(item, col)->setBackgroundColor(bgColor);
+           ui->tableWidget->item(item, col)->setBackground(QBrush(bgColor));
         }
     }
 }

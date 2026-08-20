@@ -89,9 +89,7 @@ private slots:
 
     void on_eth_Button_clicked();
 
-    void on_usb20_Button_clicked();
-
-    void on_usb30Button_clicked();
+    void on_usb_Button_clicked();
 
     void on_tfcard_Button_clicked();
 
@@ -118,6 +116,7 @@ private:
     bool ok;
     QCameraViewfinder *Camera_viewfinder;     //取景器
     QCameraViewfinder *Hdmiin_viewfinder;     //取景器
+    void initTestTable(int condition);
 signals:
     void import(Ui::MainWindow *);
 };
