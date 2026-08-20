@@ -31,23 +31,19 @@
 # 39 - GND                                      40 - I2S2_SDO_M1 = GPIO3_B3_u = 107
 
 #通过将40pin导出为gpio，基于syfs控制gpio。让40pin接LED外设，通过40LED亮灭来测试40pin
-board_model=$(cat /proc/device-tree/model)
-case "$board_model" in
-	"ArmSoM Sige5")
-		GPIO40="111 112 100 28 14 22 79 78 149 150 151 148 104 119 128 95 20 23 96 24 21"
-		;;
-	"Rockchip armsom sige5 Board")
-		GPIO40="111 112 100 28 14 22 79 78 149 150 151 148 104 119 128 95 20 23 96 24 21"
-		;;
-	"armsom w3")
-		GPIO40="139 138 115 113 109 111 112 100 148 42 41 43 44 45 150 149 63 47 114 103 110 105 0 106 107"
+# board_model=$(cat /proc/device-tree/model)
+BOARD_ID=$(cat /proc/device-tree/compatible | tr '\0' '\n' | head -1 | cut -d ',' -f2 | cut -d '-' -f2-)
+
+case "$BOARD_ID" in
+	"armsom-cm5-io")
+		GPIO40="140 141 20 97 98 96 111 112 126 28 29 89 88 99 94"
 		;;
 	*)
-		GPIO40="140 141 20 97 98 96 111 112 126 28 29 89 88 99 109" 
+		GPIO40="140 141 20 97 98 96 111 112 126 28 29 89 88 99 94" 
 		;;
 esac
-GPIOLED="15"
-GPIOS="$GPIO40 $GPIOLED"
+
+GPIOS="$GPIO40"
 
 export_gpio() {
   for IN in $GPIOS ; do

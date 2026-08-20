@@ -2,7 +2,7 @@
     <qresource prefix="/">
         <file>images/armsom.png</file>
         <file>images/camera.png</file>
-        <file>images/1.png</file>
-        <file>images/2.png</file>
+        <file>images/armsom-cm5-io.png</file>
+        <file>images/armsom-sige7.png</file>
     </qresource>
 </RCC>
