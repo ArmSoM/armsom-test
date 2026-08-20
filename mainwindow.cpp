@@ -254,13 +254,6 @@ void MainWindow::on_Audio_Button_clicked()
     AudioThread->start();
 }
 
-void MainWindow::on_gpio_Button_clicked()
-{
-    const char *command = "sudo sh /opt/armsomtest/shell/gpio.sh";
-    TestThread * gpioThread = new TestThread(MANUAL_TESTING, command, ui);
-    gpioThread->start();
-}
-
 void MainWindow::on_hdmiinfaild_clicked() {}
 void MainWindow::on_audiopass_clicked() {}
 void MainWindow::on_hdmiinpass_clicked() {}
