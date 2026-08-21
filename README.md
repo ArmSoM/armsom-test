@@ -31,3 +31,12 @@ https://cdn.haguro.top/share/qt-gles-debs.tar
 下列软件包有未满足的依赖关系:指定版本号
 apt-get install libqt5gui5=5.15.8+dfsg-11+deb12u2
 
+ArmSoM-CM5-IO 测试
+
+工具: 
+
+usb测试：2*usb3.0 ，2* 键盘/鼠标 (遇到爱国者品牌usb3.0 插着上电偶尔识别不到3.0 降级为2.0)
+M.2 测试： NVME 硬盘
+摄像头：1个ov13850,1个imx219
+mipi dis: 10.1 寸屏幕
+hdmi：hdmi显示器

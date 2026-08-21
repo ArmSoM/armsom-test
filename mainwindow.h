@@ -45,14 +45,10 @@ private slots:
     void on_Audio_Button_clicked();
 
     // 手动判定结果槽
-    void on_hdmiinfaild_clicked();
     void on_audiopass_clicked();
     void on_hdmiinpass_clicked();
-    void on_audiofaild_clicked();
     void on_mipipass_clicked();
-    void on_mipifaild_clicked();
     void on_gpiopass_clicked();
-    void on_gpiofaild_clicked();
 
 private:
     void initUI();

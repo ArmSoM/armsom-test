@@ -1,71 +1,51 @@
 #!/bin/bash
 
-# 1. 统一解析 BOARD_ID
+# 1. 获取当前板卡型号 (BOARD_ID)
 BOARD_ID=$(cat /proc/device-tree/compatible 2>/dev/null | tr '\0' '\n' | head -1 | cut -d ',' -f2 | cut -d '-' -f2-)
+echo "[TFCard Check] 当前板卡型号: ${BOARD_ID}"
 
-# 2. 根据不同板卡设置期望的 USB 3.0 和 USB 1.x 数量
+# 2. 根据不同板型指定 TF 卡对应的块设备节点
+# 注：根据 RK3588 / RK3576 / RK3568 等不同总线设计，SDMMC 节点可能有所不同
 case "$BOARD_ID" in
-    "armsom-cm5-io" )
-        REQ_USB3_COUNT=2  # 要求 2 个外接 USB 3.0 设备 (5000Mbps)
-        REQ_USB1_COUNT=2  # 要求 2 个外接 USB 1.x 键鼠设备 (1.5Mbps / 12Mbps)
+    "armsom-cm5-io")
+        DEV_NODE="/dev/mmcblk1"
         ;;
-    "sige5")
-        REQ_USB3_COUNT=1
-        REQ_USB1_COUNT=0
+    "armsom-sige7" | "armsom-sige5")
+        DEV_NODE="/dev/mmcblk1"
         ;;
-    "w3" | "sige7" | *)
-        REQ_USB3_COUNT=2
-        REQ_USB1_COUNT=0
+    *)
+        # 默认匹配规则：查找系统中非 eMMC 的 SD/TF 块设备 (排除 eMMC 的 mmcblk0/boot0 等)
+        DEV_NODE=$(ls /dev/mmcblk[1-9] 2>/dev/null | head -n 1)
         ;;
 esac
 
-echo "[INFO] 当前板卡: $BOARD_ID | 目标需求 -> USB3.0: ${REQ_USB3_COUNT}个, USB1.x(键鼠): ${REQ_USB1_COUNT}个"
-
-# 3. 实时读取 sysfs 并过滤 Hub 节点（Hub 的 bDeviceClass 为 09）
-ACTUAL_USB3_COUNT=0
-ACTUAL_USB1_COUNT=0
-
-for dev in /sys/bus/usb/devices/*; do
-    # 过滤非节点目录
-    [ -f "$dev/speed" ] || continue
-    
-    # 获取设备 Class，过滤掉根控制器及外接 Hub (bDeviceClass 为 09)
-    dev_class=""
-    [ -f "$dev/bDeviceClass" ] && dev_class=$(cat "$dev/bDeviceClass" 2>/dev/null)
-    [ "$dev_class" = "09" ] && continue
-
-    # 获取当前外接设备的速率
-    speed=$(cat "$dev/speed" 2>/dev/null)
-
-    # 统计匹配项
-    case "$speed" in
-        "5000")
-            ACTUAL_USB3_COUNT=$((ACTUAL_USB3_COUNT + 1))
-            ;;
-        "1.5" | "12")
-            ACTUAL_USB1_COUNT=$((ACTUAL_USB1_COUNT + 1))
-            ;;
-    esac
-done
-
-echo "[INFO] 实际外接识别 -> USB3.0: ${ACTUAL_USB3_COUNT}个, USB1.x: ${ACTUAL_USB1_COUNT}个"
-
-# 4. 双重条件校验
-PASS=true
-
-if [ "$ACTUAL_USB3_COUNT" -lt "$REQ_USB3_COUNT" ]; then
-    echo "[FAIL] USB 3.0 接口识别未达标 (需要 $REQ_USB3_COUNT 个外接设备，实际识别到 $ACTUAL_USB3_COUNT 个)"
-    PASS=false
+# 3. 判断设备节点是否存在
+if [ -z "$DEV_NODE" ] || [ ! -b "$DEV_NODE" ]; then
+    echo "[FAIL] 未在系统中发现 TF 卡设备节点！"
+    exit 1
 fi
 
-if [ "$ACTUAL_USB1_COUNT" -lt "$REQ_USB1_COUNT" ]; then
-    echo "[FAIL] USB 1.x (键鼠) 接口识别未达标 (需要 $REQ_USB1_COUNT 个外接设备，实际识别到 $ACTUAL_USB1_COUNT 个)"
-    PASS=false
+echo "[INFO] 识别到 TF 卡设备节点: ${DEV_NODE}"
+
+# 4. 获取并校验卡容量大小 (单位：扇区/字节)
+SIZE_BYTES=$(cat /sys/class/block/$(basename ${DEV_NODE})/size 2>/dev/null)
+if [ -z "$SIZE_BYTES" ] || [ "$SIZE_BYTES" -le 0 ]; then
+    echo "[FAIL] 无法读取 TF 卡容量，卡可能损坏或未插紧！"
+    exit 1
 fi
 
-if [ "$PASS" = true ]; then
-    echo "[PASS] USB 接口综合测试通过"
+# 转换容量为 MB (每个扇区 512 字节)
+SIZE_MB=$((SIZE_BYTES * 512 / 1024 / 1024))
+echo "[INFO] TF 卡检测到的总容量: ${SIZE_MB} MB"
+
+# 5. 执行数据总线读写实测（读取前 4MB 数据，校验物理 Pin 针脚与数据线收发是否正常）
+echo "[INFO] 正在执行 TF 卡物理总线数据读取测试..."
+dd if=${DEV_NODE} of=/dev/null bs=1M count=4 status=none 2>/dev/null
+
+if [ $? -eq 0 ]; then
+    echo "[PASS] TF 卡检测通过！容量: ${SIZE_MB}MB"
     exit 0
 else
+    echo "[FAIL] TF 卡数据读取异常，总线通信失败！"
     exit 1
 fi

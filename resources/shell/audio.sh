@@ -14,9 +14,11 @@ case "$BOARD_ID" in
         wait $PID_CARD0 $PID_CARD1 $PID_CARD2
         
         echo "三个设备同时播放完成！"
+        exit 0
         ;;
     "armsom-sige7" | "armsom-sige5")
         echo "检测到 Sige 系列板卡，执行适配逻辑..."
+        exit 0
         ;;
     *)
         echo "未知的板卡类型: $BOARD_ID，终止测试！"

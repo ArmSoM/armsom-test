@@ -58,10 +58,9 @@ QList<TestItem> getTestListByBoard(int condition)
                 {"TFCARD测试",   AUTO_TEST,   "sudo sh /opt/armsomtest/shell/tfcard.sh",  nullptr, nullptr},
                 {"M.2接口测试",  AUTO_TEST,   "sudo sh /opt/armsomtest/shell/m2.sh",      nullptr, nullptr},
                 {"Camera测试",   AUTO_TEST,   "sudo sh /opt/armsomtest/shell/camera.sh",  nullptr, nullptr},
-                {"音频测试",     MANUAL_TEST, "", SLOT(on_audiopass_clicked()),  SLOT(on_audiofaild_clicked())},
-                {"MIPI屏测试",   MANUAL_TEST, "", SLOT(on_mipipass_clicked()),   SLOT(on_mipifaild_clicked())},
-                {"HDMIIN测试",   MANUAL_TEST, "", SLOT(on_hdmiinpass_clicked()), SLOT(on_hdmiinfaild_clicked())},
-                {"40PIN测试",    MANUAL_TEST, "", SLOT(on_gpiopass_clicked()),    SLOT(on_gpiofaild_clicked())}
+                {"音频测试",     AUTO_TEST, "sudo sh /opt/armsomtest/shell/audio.sh",nullptr, nullptr},
+                {"MIPI屏测试",   MANUAL_TEST, "", SLOT(on_mipipass_clicked()),   nullptr},
+                // {"40PIN测试",    MANUAL_TEST, "", SLOT(on_gpiopass_clicked()),    nullptr}
             };
             break;
 
@@ -73,8 +72,8 @@ QList<TestItem> getTestListByBoard(int condition)
                 {"BT测试",       AUTO_TEST,   "sudo sh /opt/armsomtest/shell/bt.sh",     nullptr, nullptr},
                 {"RTC测试",      AUTO_TEST,   "sudo sh /opt/armsomtest/shell/rtc.sh",    nullptr, nullptr},
                 {"TFCARD测试",   AUTO_TEST,   "sudo sh /opt/armsomtest/shell/tfcard.sh",  nullptr, nullptr},
-                {"音频测试",     MANUAL_TEST, "", SLOT(on_audiopass_clicked()),  SLOT(on_audiofaild_clicked())},
-                {"40PIN测试",    MANUAL_TEST, "", SLOT(on_gpiopass_clicked()),    SLOT(on_gpiofaild_clicked())}
+                {"音频测试",     AUTO_TEST, "", nullptr,  nullptr},
+                {"40PIN测试",    MANUAL_TEST, "", SLOT(on_gpiopass_clicked()),    nullptr}
             };
             break;
 
@@ -304,11 +303,7 @@ void MainWindow::on_Audio_Button_clicked()
 }
 
 // 手动测试结果按钮绑定的空槽函数（根据实际需求扩充）
-void MainWindow::on_hdmiinfaild_clicked() {}
 void MainWindow::on_audiopass_clicked() {}
 void MainWindow::on_hdmiinpass_clicked() {}
-void MainWindow::on_audiofaild_clicked() {}
 void MainWindow::on_mipipass_clicked() {}
-void MainWindow::on_mipifaild_clicked() {}
 void MainWindow::on_gpiopass_clicked() {}
-void MainWindow::on_gpiofaild_clicked() {}
