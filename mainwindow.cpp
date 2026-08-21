@@ -168,54 +168,46 @@ void MainWindow::on_TestButton_clicked()
 {
     ui->TestButton->setEnabled(false);
 
-    // 触发各类自动化脚本测试
-    const char *command = "sudo sh /opt/armsomtest/shell/wifi.sh";
-    WifiThread = new TestThread(4, command, ui, this);
-    WifiThread->start();
+    QList<TestItem> testItems = getTestListByBoard(this->condition);
 
-    command = "sudo sh /opt/armsomtest/shell/bt.sh";
-    BtThread = new TestThread(5, command, ui, this);
-    BtThread->start();
+    for (int i = 0; i < testItems.size(); ++i) {
+        const TestItem &item = testItems.at(i);
 
-    command = "sudo sh /opt/armsomtest/shell/eth.sh";
-    Ethhread = new TestThread(3, command, ui, this);
-    Ethhread->start();
+        if (item.type != AUTO_TEST) {
+            continue;
+        }
 
-    command = "sudo sh /opt/armsomtest/shell/M2.sh";
-    M2Thread = new TestThread(8, command, ui, this);
-    M2Thread->start();
+        QString scriptPath;
+        if (item.name == "USB测试" || item.name == "USB3测试") {
+            scriptPath = "sudo sh /opt/armsomtest/shell/usb.sh";
+        } else if (item.name == "网口测试") {
+            scriptPath = "sudo sh /opt/armsomtest/shell/eth.sh";
+        } else if (item.name == "WIFI测试") {
+            scriptPath = "sudo sh /opt/armsomtest/shell/wifi.sh";
+        } else if (item.name == "BT测试") {
+            scriptPath = "sudo sh /opt/armsomtest/shell/bt.sh";
+        } else if (item.name == "RTC测试") {
+            scriptPath = "sudo sh /opt/armsomtest/shell/rtc.sh";
+        } else if (item.name == "TFCARD测试") {
+            scriptPath = "sudo sh /opt/armsomtest/shell/tfcard.sh";
+        } else if (item.name == "M.2接口测试") {
+            scriptPath = "sudo sh /opt/armsomtest/shell/m2.sh";
+        } else if (item.name == "Camera测试") {
+            scriptPath = "sudo sh /opt/armsomtest/shell/camera.sh";
+        }
 
-    command = "sudo sh /opt/armsomtest/shell/typec.sh";
-    TypecThread = new TestThread(1, command, ui, this);
-    TypecThread->start();
+        if (!scriptPath.isEmpty()) {
+            TestThread *thread = new TestThread(i, scriptPath, this);
 
-    command = "sudo sh /opt/armsomtest/shell/usb.sh";
-    UsbThread = new TestThread(0, command, ui, this);
-    UsbThread->start();
+            // 连接测试完成信号 -> 更新 UI 槽函数
+            connect(thread, &TestThread::testFinished, this, &MainWindow::onTestThreadFinished);
 
-    command = "sudo sh /opt/armsomtest/shell/tfcard.sh";
-    TfcardThread = new TestThread(7, command, ui, this);
-    TfcardThread->start();
+            // 线程结束后自动销毁内存
+            connect(thread, &TestThread::finished, thread, &QObject::deleteLater);
 
-    command = "sudo sh /opt/armsomtest/shell/rtc.sh";
-    RtcThread = new TestThread(6, command, ui, this);
-    RtcThread->start();
-
-    command = "sudo sh /opt/armsomtest/shell/camera.sh";
-    CameraThread = new TestThread(9, command, ui, this);
-    CameraThread->start();
-
-    if (ok) timer->start(33);
-    else timer->stop();
-    ok = !ok;
-
-    command = "sudo sh /opt/armsomtest/shell/audio.sh";
-    AudioThread = new TestThread(MANUAL_TESTING, command, ui, this);
-    AudioThread->start();
-
-    command = "sudo sh /opt/armsomtest/shell/gpio40.sh";
-    PinThread = new TestThread(MANUAL_TESTING, command, ui, this);
-    PinThread->start();
+            thread->start();
+        }
+    }
 }
 
 // 单项手动测试按钮触发槽函数
