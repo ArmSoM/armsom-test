@@ -3,23 +3,24 @@
 
 #include <QMainWindow>
 #include <QTableWidget>
-#include <QThread>
+#include <QPushButton>
+#include <QHeaderView>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
 enum TestType {
-    AUTO_TEST,  // 自动测试
-    MANUAL_TEST // 人工测试
+    AUTO_TEST,
+    MANUAL_TEST
 };
 
 struct TestItem {
-    QString name;            // 测试项名称
-    TestType type;           // 测试类型
-    QString scriptPath;      // 自动化测试脚本路径 (若为 MANUAL_TEST 可留空)
-    const char* passSlot;    // 通过按钮绑定的槽函数
-    const char* failSlot;    // 失败按钮绑定的槽函数
+    QString name;
+    TestType type;
+    QString scriptPath;
+    const char* passSlot;
+    const char* failSlot;
 };
 
 class MainWindow : public QMainWindow
@@ -33,7 +34,7 @@ public:
 private slots:
     void on_TestButton_clicked();
     
-    // 自定义槽：线程完成自动化测试后回传结果更新 UI (改变文字及背景变绿/变红)
+    // 对应接收 TestThread 信号的槽函数
     void onTestThreadFinished(int row, bool isSuccess);
 
     // 手动测试触发槽
@@ -58,8 +59,8 @@ private:
     void initTestTable(int condition);
 
     Ui::MainWindow *ui;
-    int condition = -1;              // 当前板卡 Condition
-    int m_runningThreadsCount = 0;    // 运行中的自动化测试线程计数器
+    int condition = -1;
+    int m_runningThreadsCount = 0;
 };
 
 #endif // MAINWINDOW_H
