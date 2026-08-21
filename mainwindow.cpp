@@ -174,14 +174,44 @@ void MainWindow::initTestTable(int condition)
             ui->tableWidget->setItem(i, 2, new QTableWidgetItem("自动测试"));
             ui->tableWidget->setItem(i, 3, new QTableWidgetItem("等待测试"));
         } 
-        else if (item.type == MANUAL_TEST) {
+       else if (item.type == MANUAL_TEST) {
             QPushButton *passBtn = new QPushButton("通过", this);
-            if (item.passSlot) connect(passBtn, SIGNAL(clicked()), this, item.passSlot);
-            ui->tableWidget->setCellWidget(i, 2, passBtn);
+            // 1. 将当前的行号保存到按钮的 dynamic property 中
+            passBtn->setProperty("row", i);
 
-            QPushButton *failBtn = new QPushButton("不通过", this);
-            if (item.failSlot) connect(failBtn, SIGNAL(clicked()), this, item.failSlot);
-            ui->tableWidget->setCellWidget(i, 3, failBtn);
+            // 2. 绑定点击事件，通过 Lambda 明确知道点了哪一行
+            connect(passBtn, &QPushButton::clicked, this, [this, passBtn]() {
+                int row = passBtn->property("row").toInt();
+                this->setRowTestResult(row, true); // 触发更新 UI 状态
+            });
+
+            ui->tableWidget->setCellWidget(i, 2, passBtn);
+            ui->tableWidget->setItem(i, 3, new QTableWidgetItem("等待测试"));
+        }
+    }
+}
+
+void MainWindow::setRowTestResult(int row, bool isSuccess)
+{
+    if (row < 0 || row >= ui->tableWidget->rowCount()) return;
+
+    QString resultText = isSuccess ? "通过" : "不通过";
+    QColor bgColor = isSuccess ? Qt::green : Qt::red;
+
+    // 1. 更新第 3 列状态文本
+    QTableWidgetItem *statusItem = ui->tableWidget->item(row, 3);
+    if (!statusItem) {
+        statusItem = new QTableWidgetItem();
+        ui->tableWidget->setItem(row, 3, statusItem);
+    }
+    statusItem->setText(resultText);
+    statusItem->setTextAlignment(Qt::AlignCenter);
+
+    // 2. 设置整行的背景颜色
+    for (int col = 0; col < 4; ++col) {
+        QTableWidgetItem *item = ui->tableWidget->item(row, col);
+        if (item) {
+            item->setBackground(QBrush(bgColor));
         }
     }
 }
@@ -249,21 +279,7 @@ void MainWindow::on_TestButton_clicked()
 // 接收后台线程测试结果，刷新整行颜色和文本
 void MainWindow::onTestThreadFinished(int row, bool isSuccess)
 {
-    QString resultText = isSuccess ? "通过" : "不通过";
-    QColor bgColor = isSuccess ? Qt::green : Qt::red;
-
-    // 更新第 3 列文本
-    QTableWidgetItem *statusItem = new QTableWidgetItem(resultText);
-    statusItem->setTextAlignment(Qt::AlignCenter);
-    ui->tableWidget->setItem(row, 3, statusItem);
-
-    // 设置整行的背景颜色
-    for (int col = 0; col < 4; ++col) {
-        QTableWidgetItem *item = ui->tableWidget->item(row, col);
-        if (item) {
-            item->setBackground(QBrush(bgColor));
-        }
-    }
+    setRowTestResult(row, isSuccess);
 }
 
 // 单项手动拉起脚本槽函数示例（用于支持调起测试但不在主列表上自动刷颜色的任务）

@@ -53,6 +53,7 @@ private slots:
 private:
     void initUI();
     void initTestTable(int condition);
+    void setRowTestResult(int row, bool isSuccess);
 
     Ui::MainWindow *ui;
     int condition = -1;
