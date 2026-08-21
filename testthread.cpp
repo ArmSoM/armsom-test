@@ -1,3 +1,16 @@
+#include "testthread.h"
+
+TestThread::TestThread(int itemNum, const QString &command, QObject *parent)
+    : QThread(parent)
+    , m_itemNum(itemNum)
+    , m_command(command)
+{
+}
+
+TestThread::~TestThread()
+{
+}
+
 void TestThread::run()
 {
     if (m_itemNum == 99) {
@@ -16,9 +29,8 @@ void TestThread::run()
     qDebug() << "[Auto Thread Start] Row:" << m_itemNum << "Cmd:" << m_command;
 
     QProcess process;
-    // 使用 bash -c 显式包裹执行命令
     process.start("bash", QStringList() << "-c" << m_command);
-    process.waitForFinished(-1); // 等待脚本彻底执行完毕
+    process.waitForFinished(-1);
 
     int exitCode = process.exitCode();
     QProcess::ExitStatus exitStatus = process.exitStatus();
