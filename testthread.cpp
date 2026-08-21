@@ -1,35 +1,33 @@
-#include "testthread.h"
-#include <QProcess>
-#include <QDebug>
-
-TestThread::TestThread(int itemNum, const QString &command, QObject *parent)
-    : QThread(parent)
-    , m_itemNum(itemNum)
-    , m_command(command)
-{
-}
-
 void TestThread::run()
 {
-    // 如果是人工测试项（例如约定 99 或 MANUAL_TESTING），仅执行命令拉起窗口/测试，无需刷新自动表格
     if (m_itemNum == 99) {
-        qDebug() << "Executing manual test command:" << m_command;
+        qDebug() << "[Manual Thread] Executing:" << m_command;
         if (!m_command.isEmpty()) {
             QProcess::execute(m_command);
         }
         return;
     }
 
-    // 自动化测试项
     if (m_command.isEmpty()) {
         emit testFinished(m_itemNum, false);
         return;
     }
 
-    // 使用 QProcess::execute 同步执行系统命令，获取 exitCode (0 为 Success/Pass)
-    int exitCode = QProcess::execute(m_command);
-    bool isSuccess = (exitCode == 0);
+    qDebug() << "[Auto Thread Start] Row:" << m_itemNum << "Cmd:" << m_command;
 
-    // 发射信号告知主线程测试结果，由主线程在 UI 层面刷新文字与颜色
+    QProcess process;
+    // 使用 bash -c 显式包裹执行命令
+    process.start("bash", QStringList() << "-c" << m_command);
+    process.waitForFinished(-1); // 等待脚本彻底执行完毕
+
+    int exitCode = process.exitCode();
+    QProcess::ExitStatus exitStatus = process.exitStatus();
+
+    bool isSuccess = (exitStatus == QProcess::NormalExit && exitCode == 0);
+
+    qDebug() << "[Auto Thread Done] Row:" << m_itemNum 
+             << "ExitCode:" << exitCode 
+             << "Result:" << (isSuccess ? "PASS" : "FAIL");
+
     emit testFinished(m_itemNum, isSuccess);
 }

@@ -80,7 +80,7 @@ QList<TestItem> getTestListByBoard(int condition)
 
         default: // 默认未知板卡配置
             items = {
-                {"USB3测试",     AUTO_TEST,   "sudo sh /opt/armsomtest/shell/usb.sh",    nullptr, nullptr},
+                {"USB测试",     AUTO_TEST,   "sudo sh /opt/armsomtest/shell/usb.sh",    nullptr, nullptr},
                 {"网口测试",     AUTO_TEST,   "sudo sh /opt/armsomtest/shell/eth.sh",    nullptr, nullptr},
                 {"RTC测试",      AUTO_TEST,   "sudo sh /opt/armsomtest/shell/rtc.sh",    nullptr, nullptr}
             };
@@ -164,26 +164,24 @@ void MainWindow::initTestTable(int condition)
         ui->tableWidget->setItem(i, 0, itemNum);
 
         // 第 1 列：测试项目名称
-        ui->tableWidget->setItem(i, 1, new QTableWidgetItem(item.name));
+        QTableWidgetItem *itemName = new QTableWidgetItem(item.name);
+        // 将脚本路径存入 UserRole 绑定的 UserData 中，防止重跑
+        itemName->setData(Qt::UserRole, item.scriptPath);
+        itemName->setData(Qt::UserRole + 1, static_cast<int>(item.type));
+        ui->tableWidget->setItem(i, 1, itemName);
 
         // 第 2 列 & 第 3 列
         if (item.type == AUTO_TEST) {
             ui->tableWidget->setItem(i, 2, new QTableWidgetItem("自动测试"));
-            ui->tableWidget->setItem(i, 3, new QTableWidgetItem("进行中..."));
+            ui->tableWidget->setItem(i, 3, new QTableWidgetItem("等待测试"));
         } 
         else if (item.type == MANUAL_TEST) {
             QPushButton *passBtn = new QPushButton("通过", this);
-            passBtn->setEnabled(true);
-            if (item.passSlot) {
-                connect(passBtn, SIGNAL(clicked()), this, item.passSlot);
-            }
+            if (item.passSlot) connect(passBtn, SIGNAL(clicked()), this, item.passSlot);
             ui->tableWidget->setCellWidget(i, 2, passBtn);
 
             QPushButton *failBtn = new QPushButton("不通过", this);
-            failBtn->setEnabled(true);
-            if (item.failSlot) {
-                connect(failBtn, SIGNAL(clicked()), this, item.failSlot);
-            }
+            if (item.failSlot) connect(failBtn, SIGNAL(clicked()), this, item.failSlot);
             ui->tableWidget->setCellWidget(i, 3, failBtn);
         }
     }
@@ -193,13 +191,19 @@ void MainWindow::initTestTable(int condition)
 void MainWindow::on_TestButton_clicked()
 {
     ui->TestButton->setEnabled(false);
-
-    QList<TestItem> testItems = getTestListByBoard(this->condition);
     m_runningThreadsCount = 0;
 
-    // 1. 统计当前板卡需要运行的 AUTO_TEST 项数
-    for (const TestItem &item : testItems) {
-        if (item.type == AUTO_TEST && !item.scriptPath.isEmpty()) {
+    int rowCount = ui->tableWidget->rowCount();
+
+    // 1. 先扫描需要跑的 AUTO_TEST 项
+    for (int i = 0; i < rowCount; ++i) {
+        QTableWidgetItem *nameItem = ui->tableWidget->item(i, 1);
+        if (!nameItem) continue;
+
+        TestType type = static_cast<TestType>(nameItem->data(Qt::UserRole + 1).toInt());
+        QString scriptPath = nameItem->data(Qt::UserRole).toString();
+
+        if (type == AUTO_TEST && !scriptPath.isEmpty()) {
             m_runningThreadsCount++;
         }
     }
@@ -209,23 +213,28 @@ void MainWindow::on_TestButton_clicked()
         return;
     }
 
-    // 2. 启动对应行的自动化测试线程
-    for (int i = 0; i < testItems.size(); ++i) {
-        const TestItem &item = testItems.at(i);
+    // 2. 依次按表格行号精准启动线程
+    for (int i = 0; i < rowCount; ++i) {
+        QTableWidgetItem *nameItem = ui->tableWidget->item(i, 1);
+        if (!nameItem) continue;
 
-        if (item.type != AUTO_TEST || item.scriptPath.isEmpty()) {
+        TestType type = static_cast<TestType>(nameItem->data(Qt::UserRole + 1).toInt());
+        QString scriptPath = nameItem->data(Qt::UserRole).toString();
+
+        if (type != AUTO_TEST || scriptPath.isEmpty()) {
             continue;
         }
 
-        // 初始化表格状态显示
-        ui->tableWidget->setItem(i, 3, new QTableWidgetItem("测试中..."));
+        // 设置当前行状态为“测试中...”
+        QTableWidgetItem *statusItem = new QTableWidgetItem("测试中...");
+        statusItem->setTextAlignment(Qt::AlignCenter);
+        ui->tableWidget->setItem(i, 3, statusItem);
 
-        TestThread *thread = new TestThread(i, item.scriptPath, this);
+        // 绑定准确的行号 i 与对应脚本路径
+        TestThread *thread = new TestThread(i, scriptPath, this);
 
-        // 绑定信号 1：测试完成后刷新当前行文本和颜色（通过变绿/不通过变红）
         connect(thread, &TestThread::testFinished, this, &MainWindow::onTestThreadFinished);
 
-        // 绑定信号 2：所有并发线程完成后重新解锁“一键测试”按钮，并清理内存
         connect(thread, &TestThread::finished, this, [this, thread]() {
             m_runningThreadsCount--;
             if (m_runningThreadsCount <= 0) {
