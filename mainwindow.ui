@@ -23,7 +23,7 @@
    <widget class="QPushButton" name="TestButton">
     <property name="geometry">
      <rect>
-      <x>490</x>
+      <x>690</x>
       <y>650</y>
       <width>141</width>
       <height>61</height>
@@ -72,29 +72,29 @@
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>0</x>
+      <x>10</x>
       <y>-50</y>
-      <width>150</width>
-      <height>150</height>
+      <width>180</width>
+      <height>180</height>
      </rect>
     </property>
     <property name="minimumSize">
      <size>
-      <width>150</width>
-      <height>150</height>
+      <width>180</width>
+      <height>180</height>
      </size>
     </property>
     <property name="maximumSize">
      <size>
-      <width>150</width>
-      <height>150</height>
+      <width>180</width>
+      <height>180</height>
      </size>
     </property>
     <property name="text">
      <string/>
     </property>
     <property name="pixmap">
-     <pixmap resource="QtResources.qrc">:/images/armsom.png</pixmap>
+     <pixmap>:/images/armsom.png</pixmap>
     </property>
     <property name="scaledContents">
      <bool>true</bool>
@@ -103,10 +103,10 @@
    <widget class="QLabel" name="label_2">
     <property name="geometry">
      <rect>
-      <x>210</x>
+      <x>110</x>
       <y>60</y>
-      <width>385</width>
-      <height>286</height>
+      <width>500</width>
+      <height>650</height>
      </rect>
     </property>
     <property name="minimumSize">
@@ -117,40 +117,12 @@
     </property>
     <property name="maximumSize">
      <size>
-      <width>385</width>
-      <height>286</height>
+      <width>500</width>
+      <height>650</height>
      </size>
     </property>
     <property name="text">
      <string/>
-    </property>
-    <property name="pixmap">
-     <pixmap resource="QtResources.qrc">:/images/1.png</pixmap>
-    </property>
-    <property name="scaledContents">
-     <bool>true</bool>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_3">
-    <property name="geometry">
-     <rect>
-      <x>210</x>
-      <y>360</y>
-      <width>385</width>
-      <height>286</height>
-     </rect>
-    </property>
-    <property name="maximumSize">
-     <size>
-      <width>385</width>
-      <height>286</height>
-     </size>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-    <property name="pixmap">
-     <pixmap resource="QtResources.qrc">:/images/2.png</pixmap>
     </property>
     <property name="scaledContents">
      <bool>true</bool>
@@ -169,8 +141,5 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
- <resources>
-  <include location="QtResources.qrc"/>
- </resources>
  <connections/>
 </ui>

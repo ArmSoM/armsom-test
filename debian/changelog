@@ -1,3 +1,10 @@
+armsom-test (1.0.3) bookworm; urgency=medium
+
+  [ luolongji ]
+  * Official release for armsom-cm5-io
+
+ -- luolongji <jack@armsom.org>  Fri, 21 Aug 2026 06:02:00 +0000
+
 armsom-test (1.0.2) bookworm; urgency=medium
 
   [ Jianfeng Liu ]

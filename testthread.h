@@ -2,29 +2,27 @@
 #define TESTTHREAD_H
 
 #include <QThread>
-#include "mainwindow.h"
-#include "ui_mainwindow.h"
-class MainWindow;
-
-#define SHELL       0
-#define COMMAM      1
+#include <QString>
+#include <QProcess>
+#include <QDebug>
 
 class TestThread : public QThread
 {
+    Q_OBJECT
+
 public:
-    TestThread(int itemnum,const char *command,Ui::MainWindow *ui,QWidget *parent = nullptr);
-
-    int m_ItemNum;
-    const char * m_command;
-    Ui::MainWindow * ui;
-
-private:
+    explicit TestThread(int itemNum, const QString &command, QObject *parent = nullptr);
+    ~TestThread();
 
 protected:
-    void run();
-private slots:
+    void run() override;
 
+signals:
+    void testFinished(int itemNum, bool isSuccess);
+
+private:
+    int m_itemNum;
+    QString m_command;
 };
-
 
 #endif // TESTTHREAD_H
