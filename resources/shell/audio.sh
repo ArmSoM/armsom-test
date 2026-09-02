@@ -20,6 +20,13 @@ case "$BOARD_ID" in
         echo "检测到 Sige 系列板卡，执行适配逻辑..."
         exit 0
         ;;
+    "sige6")
+        echo "检测到 ArmSom Sige6 板，开始播放音频..."
+        TEST_WAV="/opt/armsomtest/audio.wav"
+        aplay -D hw:0,0 "$TEST_WAV"
+        echo "音频播放完成！"
+        exit 0
+        ;;
     *)
         echo "未知的板卡类型: $BOARD_ID，终止测试！"
         exit 1

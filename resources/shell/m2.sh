@@ -23,6 +23,10 @@ case "$BOARD_ID" in
         PCIE_BDF="0000:01:00.0"
         DEV="/dev/nvme0n1"
         ;;
+    "sige6")
+        PCIE_BDF="0000:01:00.0"
+        DEV="/dev/nvme0n1"
+        ;;
     *)
         PCIE_BDF="0000:01:00.0"
         DEV="/dev/nvme0n1"

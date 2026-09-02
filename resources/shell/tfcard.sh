@@ -13,6 +13,9 @@ case "$BOARD_ID" in
     "armsom-sige7" | "armsom-sige5")
         DEV_NODE="/dev/mmcblk1"
         ;;
+    "sige6")
+        DEV_NODE="/dev/mmcblk2"
+        ;;
     *)
         # 默认匹配规则：查找系统中非 eMMC 的 SD/TF 块设备 (排除 eMMC 的 mmcblk0/boot0 等)
         DEV_NODE=$(ls /dev/mmcblk[1-9] 2>/dev/null | head -n 1)

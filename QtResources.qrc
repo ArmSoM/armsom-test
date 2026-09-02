@@ -4,5 +4,6 @@
         <file>images/camera.png</file>
         <file>images/armsom-cm5-io.png</file>
         <file>images/armsom-sige7.png</file>
+        <file>images/armsom-sige6.png</file>
     </qresource>
 </RCC>

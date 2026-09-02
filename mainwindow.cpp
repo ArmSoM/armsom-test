@@ -38,6 +38,8 @@ int getBoardCondition()
         return 2;
     } else if (boardId == "armsom-p2pro") {
         return 3;
+    } else if (boardId == "sige6") {
+        return 4;
     } else {
         return 0;
     }
@@ -76,7 +78,20 @@ QList<TestItem> getTestListByBoard(int condition)
                 {"40PIN测试",    MANUAL_TEST, "", SLOT(on_gpiopass_clicked()),    nullptr}
             };
             break;
-
+        case 4: // armsom-sige6
+            items = {
+                {"USB测试",      AUTO_TEST,   "sudo sh /opt/armsomtest/shell/usb.sh",    nullptr, nullptr},
+                {"网口测试",     AUTO_TEST,   "sudo sh /opt/armsomtest/shell/eth.sh",    nullptr, nullptr},
+                {"WIFI测试",     AUTO_TEST,   "sudo sh /opt/armsomtest/shell/wifi.sh",   nullptr, nullptr},
+                {"BT测试",       AUTO_TEST,   "sudo sh /opt/armsomtest/shell/bt.sh",     nullptr, nullptr},
+                {"RTC测试",      AUTO_TEST,   "sudo sh /opt/armsomtest/shell/rtc.sh",    nullptr, nullptr},
+                {"M.2接口测试",  AUTO_TEST,   "sudo sh /opt/armsomtest/shell/m2.sh",      nullptr, nullptr},
+                {"Camera测试",   AUTO_TEST,   "sudo sh /opt/armsomtest/shell/camera.sh",  nullptr, nullptr},
+                {"TFCARD测试",   AUTO_TEST,   "sudo sh /opt/armsomtest/shell/tfcard.sh",  nullptr, nullptr},
+                {"音频测试",     AUTO_TEST,   "sudo sh /opt/armsomtest/shell/audio.sh", nullptr, nullptr},
+                {"40PIN测试",    MANUAL_TEST, "", SLOT(on_gpiopass_clicked()),    nullptr}
+            };
+            break;
         default: // 默认未知板卡配置
             items = {
                 {"USB测试",     AUTO_TEST,   "sudo sh /opt/armsomtest/shell/usb.sh",    nullptr, nullptr},
@@ -116,6 +131,9 @@ void MainWindow::initUI()
             break;
         case 2:
         case 3:
+        case 4:
+            ui->label_2->setPixmap(QPixmap(":/images/armsom-sige6.png"));
+            break;
         default:
             ui->label_2->setPixmap(QPixmap(":/images/armsom-sige7.png"));
             break;

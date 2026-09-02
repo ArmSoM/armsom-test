@@ -10,6 +10,10 @@ case "$board_model" in
 		typec_num=2
 		typec_check_cmd="ls /sys/class/typec/"
 		;;
+	"sun60iw2")
+		typec_num=2
+		typec_check_cmd="ls /sys/class/typec/"
+		;;
 	"armsom w3")
 		typec_num=2
 		typec_check_cmd="dmesg | grep \"android_work: sent uevent USB_STATE=CONNECTED\""

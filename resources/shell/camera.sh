@@ -49,6 +49,101 @@ case "$BOARD_ID" in
             exit 1
         fi
         ;;
+    
+    "sige6")
+        echo "检测到全志 Sige6 板卡，使用专用测试程序检测摄像头..."
+
+        if ! command -v csi_test_mplane >/dev/null; then
+            echo "[FAIL] csi_test_mplane 命令未找到，请确认程序路径"
+            exit 1
+        fi
+
+        # 获取传感器列表
+        MEDIA_OUTPUT=$(media-ctl -d /dev/media0 -p 2>/dev/null)
+        if [ -z "$MEDIA_OUTPUT" ]; then
+            echo "[FAIL] media-ctl 无法获取拓扑信息"
+            exit 1
+        fi
+
+        HAS_IMX219=$(echo "$MEDIA_OUTPUT" | grep -q "imx219" && echo "yes" || echo "no")
+        HAS_OV13850=$(echo "$MEDIA_OUTPUT" | grep -q "ov13850_mipi" && echo "yes" || echo "no")
+
+        # 如果两个传感器都未检测到，直接失败
+        if [ "$HAS_IMX219" = "no" ] && [ "$HAS_OV13850" = "no" ]; then
+            echo "[FAIL] 未检测到任何传感器！"
+            exit 1
+        fi
+
+        # 测试函数：尝试抓图，检查文件是否生成，失败后重试一次
+        test_camera() {
+            local dev=$1
+            local w=$2
+            local h=$3
+            local mode=$4
+            local tmp_dir="/tmp"
+
+            rm -f ${tmp_dir}/fb${dev}_y${mode}_*.bin
+
+            # 第一次尝试
+            csi_test_mplane $dev 0 $w $h $tmp_dir $mode 5 >/dev/null 2>&1
+            if ls ${tmp_dir}/fb${dev}_y${mode}_*.bin 1>/dev/null 2>&1; then
+                rm -f ${tmp_dir}/fb${dev}_y${mode}_*.bin
+                return 0
+            fi
+
+            # 重试一次
+            sleep 1
+            csi_test_mplane $dev 0 $w $h $tmp_dir $mode 5 >/dev/null 2>&1
+            if ls ${tmp_dir}/fb${dev}_y${mode}_*.bin 1>/dev/null 2>&1; then
+                rm -f ${tmp_dir}/fb${dev}_y${mode}_*.bin
+                return 0
+            fi
+
+            return 1
+        }
+
+        SUCCESS_COUNT=0
+
+        # 测试 IMX219（video0）
+        if [ "$HAS_IMX219" = "yes" ]; then
+            echo "检测到 IMX219，测试 /dev/video0 (1920x1080)..."
+            if test_camera 0 1920 1080 5; then
+                echo "[PASS] IMX219 抓图成功"
+                SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+            else
+                echo "[FAIL] IMX219 抓图失败"
+            fi
+        else
+            echo "[WARN] 未检测到 IMX219 传感器，跳过"
+        fi
+
+        # 测试 OV13850（video8）
+        if [ "$HAS_OV13850" = "yes" ]; then
+            echo "检测到 OV13850，测试 /dev/video8 (2112x1568)..."
+            if test_camera 8 2112 1568 5; then
+                echo "[PASS] OV13850 抓图成功"
+                SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+            else
+                echo "[FAIL] OV13850 抓图失败"
+            fi
+        else
+            echo "[WARN] 未检测到 OV13850 传感器，跳过"
+        fi
+
+        # 判断：是否所有检测到的传感器都成功？
+        # 根据您的要求：两个摄像头都接上，所以期望成功数为2（如果两个都检测到）
+        EXPECTED_COUNT=0
+        [ "$HAS_IMX219" = "yes" ] && EXPECTED_COUNT=$((EXPECTED_COUNT + 1))
+        [ "$HAS_OV13850" = "yes" ] && EXPECTED_COUNT=$((EXPECTED_COUNT + 1))
+
+        if [ "$SUCCESS_COUNT" -eq "$EXPECTED_COUNT" ] && [ "$EXPECTED_COUNT" -gt 0 ]; then
+            echo "[PASS] 所有已检测到的摄像头均抓图成功！"
+            exit 0
+        else
+            echo "[FAIL] 部分摄像头抓图失败（成功 ${SUCCESS_COUNT}/${EXPECTED_COUNT}）"
+            exit 1
+        fi
+        ;;
 
     *)
         echo "未知/未适配的板卡类型: ${BOARD_ID}，跳过或判定失败！"

@@ -8,6 +8,9 @@ case "$BOARD_ID" in
     "armsom-cm5-io")
         rtc_string="rtc-hym8563 2-0051"
         ;;
+    "sige6")
+        rtc_string="rtc-hym8563 14-0051"
+        ;;
     "w3" | "cm5-io" | "sige7" | *)
         rtc_string="rtc-hym8563 6-0051"
         ;;
