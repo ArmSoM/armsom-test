@@ -50,6 +50,17 @@ case "$BOARD_ID" in
         fi
         ;;
     
+    "armsom-sige7s")
+        echo "检测到 Sige7s 板卡，检查 IMX219 摄像头..."
+        if dmesg | grep -q "Detected IMX000219 sensor"; then
+            echo "[PASS] 检测到 IMX219 摄像头！"
+            exit 0
+        else
+            echo "[FAIL] 未检测到 IMX219 摄像头！"
+            exit 1
+        fi
+        ;;
+
     "sige6")
         echo "检测到全志 Sige6 板卡，使用专用测试程序检测摄像头..."
 

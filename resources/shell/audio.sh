@@ -16,8 +16,9 @@ case "$BOARD_ID" in
         echo "三个设备同时播放完成！"
         exit 0
         ;;
-    "armsom-sige7" | "armsom-sige5")
+    "armsom-sige7" | "armsom-sige5" | "armsom-sige7s")
         echo "检测到 Sige 系列板卡，执行适配逻辑..."
+        aplay -D hw:2,0 /opt/armsomtest/audio.wav
         exit 0
         ;;
     "sige6")
