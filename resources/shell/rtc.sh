@@ -11,7 +11,7 @@ case "$BOARD_ID" in
     "sige6")
         rtc_string="rtc-hym8563 14-0051"
         ;;
-    "w3" | "cm5-io" | "sige7" | "sige7s" | *)
+    "w3" | "cm5-io" | "sige7" | "sige7s" | "armsom-cm7s-io" | *)
         rtc_string="rtc-hym8563 6-0051"
         ;;
 esac

@@ -60,6 +60,41 @@ case "$BOARD_ID" in
             exit 1
         fi
         ;;
+    
+    "armsom-cm7s-io")
+        echo "正在对 CM7S IO 进行双摄像头检测..."
+
+        CAMERA_LOG=$(dmesg 2>/dev/null)
+
+        # 检测 IMX219：传感器识别成功 + D-PHY 匹配成功
+        if echo "$CAMERA_LOG" | grep -Fq 'imx219 4-0010: Detected IMX000219 sensor' &&
+        echo "$CAMERA_LOG" | grep -Fq 'rockchip-csi2-dphy csi2-dcphy0: dphy0 matches m01_b_imx219 4-0010:bus type 5'; then
+            echo "[PASS] IMX219 摄像头识别成功！"
+            IMX219_OK=1
+        else
+            echo "[FAIL] IMX219 摄像头识别失败！"
+            IMX219_OK=0
+        fi
+
+        # 检测 OV13850：传感器识别成功 + D-PHY 匹配成功
+        if echo "$CAMERA_LOG" | grep -Fq 'ov13850 1-0010: Detected OV00d850 sensor' &&
+        echo "$CAMERA_LOG" | grep -Fq 'rockchip-csi2-dphy csi2-dphy0: dphy0 matches m00_b_ov13850 1-0010:bus type 5'; then
+            echo "[PASS] OV13850 摄像头识别成功！"
+            OV13850_OK=1
+        else
+            echo "[FAIL] OV13850 摄像头识别失败！"
+            OV13850_OK=0
+        fi
+
+        # 必须两款摄像头都识别成功
+        if [ "$IMX219_OK" -eq 1 ] && [ "$OV13850_OK" -eq 1 ]; then
+            echo "[PASS] CM7S IO 双摄像头检测通过！"
+            exit 0
+        else
+            echo "[FAIL] CM7S IO 双摄像头检测失败，要求 IMX219 和 OV13850 均识别成功！"
+            exit 1
+        fi
+        ;;
 
     "sige6")
         echo "检测到全志 Sige6 板卡，使用专用测试程序检测摄像头..."

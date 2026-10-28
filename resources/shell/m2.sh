@@ -19,6 +19,10 @@ case "$BOARD_ID" in
         PCIE_BDF="0002:21:00.0"  # 请根据 sige7 的实际 lspci 地址微调
         DEV="/dev/nvme0n1"
         ;;
+    "armsom-cm7s-io")
+        PCIE_BDF="0004:41:00.0"
+        DEV="/dev/nvme0n1"
+        ;;
     "armsom-p2pro")
         PCIE_BDF="0000:01:00.0"
         DEV="/dev/nvme0n1"

@@ -32,6 +32,11 @@ case "$BOARD_ID" in  "armsom-cm5-io")
         EXPECTED_SPEED=1000
         TARGET_IP="192.168.10.1"
         ;;
+    "armsom-cm7s-io")
+        IFACE="end1"
+        EXPECTED_SPEED=1000
+        TARGET_IP="192.168.10.1"
+        ;;
     *)
         # 未匹配到具体型号时的默认策略
         IFACE="end0"

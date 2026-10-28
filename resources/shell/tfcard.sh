@@ -10,7 +10,7 @@ case "$BOARD_ID" in
     "armsom-cm5-io")
         DEV_NODE="/dev/mmcblk1"
         ;;
-    "armsom-sige7" | "armsom-sige5" | "armsom-sige7s")
+    "armsom-sige7" | "armsom-sige5" | "armsom-sige7s" | "armsom-cm7s-io")
         DEV_NODE="/dev/mmcblk1"
         ;;
     "sige6")

@@ -42,6 +42,8 @@ int getBoardCondition()
         return 4;
     } else if (boardId == "armsom-sige7s") {
         return 5;
+    } else if (boardId == "armsom-cm7s-io") {
+        return 6;
     } else {
         return 0;
     }
@@ -104,7 +106,19 @@ QList<TestItem> getTestListByBoard(int condition)
                 {"Camera测试",   AUTO_TEST,   "sudo sh /opt/armsomtest/shell/camera.sh",  nullptr, nullptr},
                 {"TFCARD测试",   AUTO_TEST,   "sudo sh /opt/armsomtest/shell/tfcard.sh",  nullptr, nullptr},
                 {"音频测试",     AUTO_TEST,   "sudo sh /opt/armsomtest/shell/audio.sh", nullptr, nullptr},
-                {"40PIN测试",    MANUAL_TEST, "", SLOT(on_gpiopass_clicked()),    nullptr}
+                {"40PIN测试",    MANUAL_TEST, "sudo sh /opt/armsomtest/shell/gpio40.sh", SLOT(on_gpiopass_clicked()),    nullptr}
+            };
+            break;
+        case 6: // armsom-cm7s-io
+            items = {
+                {"USB测试",      AUTO_TEST,   "sudo sh /opt/armsomtest/shell/usb.sh",    nullptr, nullptr},
+                {"网口测试",     AUTO_TEST,   "sudo sh /opt/armsomtest/shell/eth.sh",    nullptr, nullptr},
+                {"RTC测试",      AUTO_TEST,   "sudo sh /opt/armsomtest/shell/rtc.sh",    nullptr, nullptr},
+                {"M.2接口测试",  AUTO_TEST,   "sudo sh /opt/armsomtest/shell/m2.sh",      nullptr, nullptr},
+                {"Camera测试",   AUTO_TEST,   "sudo sh /opt/armsomtest/shell/camera.sh",  nullptr, nullptr},
+                {"TFCARD测试",   AUTO_TEST,   "sudo sh /opt/armsomtest/shell/tfcard.sh",  nullptr, nullptr},
+                {"音频测试",     AUTO_TEST,   "sudo sh /opt/armsomtest/shell/audio.sh", nullptr, nullptr},
+                {"40PIN测试",    MANUAL_TEST, "sudo sh /opt/armsomtest/shell/gpio40.sh", SLOT(on_gpiopass_clicked()),    nullptr}
             };
             break;
         default: // 默认未知板卡配置
@@ -153,6 +167,9 @@ void MainWindow::initUI()
             break;
         case 5:
             ui->label_2->setPixmap(QPixmap(":/images/armsom-sige7s.png"));
+            break;
+        case 6:
+            ui->label_2->setPixmap(QPixmap(":/images/armsom-cm7s-io.png"));
             break;
         default:
             ui->label_2->setPixmap(QPixmap(":/images/armsom-sige7.png"));
@@ -262,15 +279,12 @@ void MainWindow::on_TestButton_clicked()
 
     int rowCount = ui->tableWidget->rowCount();
 
-    // 1. 先扫描需要跑的 AUTO_TEST 项
+    // 1. 扫描：只要脚本路径非空就纳入（AUTO_TEST + 带脚本的 MANUAL_TEST）
     for (int i = 0; i < rowCount; ++i) {
         QTableWidgetItem *nameItem = ui->tableWidget->item(i, 1);
         if (!nameItem) continue;
-
-        TestType type = static_cast<TestType>(nameItem->data(Qt::UserRole + 1).toInt());
         QString scriptPath = nameItem->data(Qt::UserRole).toString();
-
-        if (type == AUTO_TEST && !scriptPath.isEmpty()) {
+        if (!scriptPath.isEmpty()) {
             m_runningThreadsCount++;
         }
     }
@@ -280,7 +294,7 @@ void MainWindow::on_TestButton_clicked()
         return;
     }
 
-    // 2. 依次按表格行号精准启动线程
+    // 2. 逐行启动线程
     for (int i = 0; i < rowCount; ++i) {
         QTableWidgetItem *nameItem = ui->tableWidget->item(i, 1);
         if (!nameItem) continue;
@@ -288,18 +302,19 @@ void MainWindow::on_TestButton_clicked()
         TestType type = static_cast<TestType>(nameItem->data(Qt::UserRole + 1).toInt());
         QString scriptPath = nameItem->data(Qt::UserRole).toString();
 
-        if (type != AUTO_TEST || scriptPath.isEmpty()) {
-            continue;
+        if (scriptPath.isEmpty()) continue;
+
+        // 只有自动测试才显示"测试中..."并自动回填结果
+        // 手动测试（40PIN）只跑脚本，状态栏保持"等待测试"，由人点"通过"按钮
+        int rowForThread = -1;   // 传 -1 让 onTestThreadFinished 不更新 UI
+        if (type == AUTO_TEST) {
+            QTableWidgetItem *statusItem = new QTableWidgetItem("测试中...");
+            statusItem->setTextAlignment(Qt::AlignCenter);
+            ui->tableWidget->setItem(i, 3, statusItem);
+            rowForThread = i;
         }
 
-        // 设置当前行状态为“测试中...”
-        QTableWidgetItem *statusItem = new QTableWidgetItem("测试中...");
-        statusItem->setTextAlignment(Qt::AlignCenter);
-        ui->tableWidget->setItem(i, 3, statusItem);
-
-        // 绑定准确的行号 i 与对应脚本路径
-        TestThread *thread = new TestThread(i, scriptPath, this);
-
+        TestThread *thread = new TestThread(rowForThread, scriptPath, this);
         connect(thread, &TestThread::testFinished, this, &MainWindow::onTestThreadFinished);
 
         connect(thread, &TestThread::finished, this, [this, thread]() {

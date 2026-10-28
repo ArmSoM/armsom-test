@@ -25,6 +25,11 @@ case "$BOARD_ID" in
         REQ_USB3_COUNT=0
         REQ_USB1_COUNT=2   # 要求 2 个 USB 1.x 键鼠设备 (1.5Mbps / 12Mbps)
         ;;
+    "armsom-cm7s-io")
+        REQ_USB2_3_COUNT=2 # 要求 USB2.0 + USB3.0 设备总数达到 2 个
+        REQ_USB3_COUNT=0
+        REQ_USB1_COUNT=2   # 要求 2 个 USB 1.x 键鼠设备 (1.5Mbps / 12Mbps)
+        ;;
     "w3" | "sige7" | *)
         REQ_USB2_3_COUNT=0
         REQ_USB3_COUNT=2
@@ -32,7 +37,7 @@ case "$BOARD_ID" in
         ;;
 esac
 
-if [ "$BOARD_ID" = "armsom-cm5-io" ] || [ "$BOARD_ID" = "armsom-sige7s" ] || [ "$BOARD_ID" = "sige6" ]; then
+if [ "$BOARD_ID" = "armsom-cm5-io" ] || [ "$BOARD_ID" = "armsom-sige7s" ] || [ "$BOARD_ID" = "sige6" ] || [ "$BOARD_ID" = "armsom-cm7s-io" ]; then
     echo "[INFO] 当前板卡: $BOARD_ID | 目标需求 -> (USB3.0+USB2.0): ${REQ_USB2_3_COUNT}个, USB1.x(键鼠): ${REQ_USB1_COUNT}个"
 else
     echo "[INFO] 当前板卡: $BOARD_ID | 目标需求 -> USB3.0: ${REQ_USB3_COUNT}个, USB1.x(键鼠): ${REQ_USB1_COUNT}个"
@@ -83,7 +88,7 @@ echo "[INFO] 统计结果 -> USB3.0/3.1: ${ACTUAL_USB3_COUNT}个, USB2.0: ${ACTU
 
 PASS=true
 
-if [ "$BOARD_ID" = "armsom-cm5-io" ] || [ "$BOARD_ID" = "armsom-sige7s" ] || [ "$BOARD_ID" = "sige6" ]; then
+if [ "$BOARD_ID" = "armsom-cm5-io" ] || [ "$BOARD_ID" = "armsom-sige7s" ] || [ "$BOARD_ID" = "sige6" ] || [ "$BOARD_ID" = "armsom-cm7s-io" ]; then
     # 判断 USB2.0 + USB3.0 总数是否达标
     if [ "$ACTUAL_USB2_3_TOTAL" -lt "$REQ_USB2_3_COUNT" ]; then
         echo "[FAIL] USB 2.0 + 3.0 接口识别未达标 (需要至少 $REQ_USB2_3_COUNT 个，实际识别到 $ACTUAL_USB2_3_TOTAL 个)"
