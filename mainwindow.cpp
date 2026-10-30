@@ -3,6 +3,7 @@
 #include "testthread.h"
 #include "agingwidget.h"
 #include <QTabBar>
+#include <QHBoxLayout>
 #include <QCloseEvent>
 
 #include <QFile>
@@ -27,6 +28,7 @@ int getBoardCondition()
     // Check every compatible entry before the legacy SoC-prefix parsing.
     for (const QByteArray &entry : data.split('\0')) {
         const QString compatibleId = QString::fromUtf8(entry).trimmed().section(',', -1);
+        if (compatibleId == "rk3588-armsom-aim7-io" || compatibleId == "armsom-aim7-io") return 7;
         if (compatibleId == "sige6" || compatibleId == "armsom-sige6"
                 || compatibleId.endsWith("-sige6")) {
             return 4;
@@ -134,6 +136,18 @@ QList<TestItem> getTestListByBoard(int condition)
                 {"40PIN测试",    MANUAL_TEST, "sudo sh /opt/armsomtest/shell/gpio40.sh", SLOT(on_gpiopass_clicked()),    nullptr}
             };
             break;
+        case 7: // armsom-aim7-io: GPIO is started separately by the operator.
+            items = {
+                {"USB测试", AUTO_TEST, "sudo sh /opt/armsomtest/shell/usb.sh", nullptr, nullptr},
+                {"网口测试", AUTO_TEST, "sudo sh /opt/armsomtest/shell/eth.sh", nullptr, nullptr},
+                {"RTC测试", AUTO_TEST, "sudo sh /opt/armsomtest/shell/rtc.sh", nullptr, nullptr},
+                {"M.2接口测试", AUTO_TEST, "sudo sh /opt/armsomtest/shell/m2.sh", nullptr, nullptr},
+                {"Camera测试", AUTO_TEST, "sudo sh /opt/armsomtest/shell/camera.sh", nullptr, nullptr},
+                {"TFCARD测试", AUTO_TEST, "sudo sh /opt/armsomtest/shell/tfcard.sh", nullptr, nullptr},
+                {"音频测试", AUTO_TEST, "sudo sh /opt/armsomtest/shell/audio.sh", nullptr, nullptr},
+                {"40PIN测试", MANUAL_TEST, "", SLOT(on_gpiopass_clicked()), nullptr}
+            };
+            break;
         default: // 默认未知板卡配置
             items = {
                 {"USB测试",     AUTO_TEST,   "sudo sh /opt/armsomtest/shell/usb.sh",    nullptr, nullptr},
@@ -183,6 +197,11 @@ void MainWindow::initUI()
             break;
         case 6:
             ui->label_2->setPixmap(QPixmap(":/images/armsom-cm7s-io.png"));
+            break;
+        case 7:
+            ui->label_2->setScaledContents(false);
+            ui->label_2->setPixmap(QPixmap(":/images/armsom-aim7.png").scaled(
+                ui->label_2->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
             break;
         default:
             ui->label_2->setPixmap(QPixmap(":/images/armsom-sige7.png"));
@@ -275,7 +294,42 @@ void MainWindow::initTestTable(int condition)
                 this->setRowTestResult(row, true); // 触发更新 UI 状态
             });
 
-            ui->tableWidget->setCellWidget(i, 2, passBtn);
+            if (condition == 7 && item.name == QStringLiteral("40PIN测试")) {
+                auto *controls = new QWidget(ui->tableWidget);
+                auto *layout = new QHBoxLayout(controls);
+                layout->setContentsMargins(0, 0, 0, 0);
+                layout->setSpacing(2);
+                auto *startBtn = new QPushButton(QStringLiteral("开始"), controls);
+                layout->addWidget(startBtn);
+                layout->addWidget(passBtn);
+                connect(startBtn, &QPushButton::clicked, this, [this, startBtn, passBtn]() {
+                    if (m_runningThreadsCount || (aging && aging->isRunning())) return;
+                    ++m_runningThreadsCount;
+                    ui->TestButton->setEnabled(false);
+                    if (aging) aging->setEnabled(false);
+                    startBtn->setEnabled(false);
+                    passBtn->setEnabled(false);
+                    auto *thread = new TestThread(-1,
+                        "sudo -n bash /opt/armsomtest/shell/gpio40.sh --run-gpio", this);
+                    connect(thread, &TestThread::testFinished, this,
+                        [this, passBtn](int, bool success) {
+                            // A successful GPIO command still needs visual confirmation.
+                            if (!success) setRowTestResult(passBtn->property("row").toInt(), false);
+                        });
+                    connect(thread, &TestThread::finished, this, [this, thread, startBtn, passBtn]() {
+                        --m_runningThreadsCount;
+                        ui->TestButton->setEnabled(true);
+                        if (aging) aging->setEnabled(true);
+                        startBtn->setEnabled(true);
+                        passBtn->setEnabled(true);
+                        thread->deleteLater();
+                    });
+                    thread->start();
+                });
+                ui->tableWidget->setCellWidget(i, 2, controls);
+            } else {
+                ui->tableWidget->setCellWidget(i, 2, passBtn);
+            }
             ui->tableWidget->setItem(i, 3, new QTableWidgetItem("等待测试"));
         }
     }
@@ -418,6 +472,10 @@ void MainWindow::on_gpiopass_clicked() {}
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
+    if (condition == 7 && m_runningThreadsCount > 0) {
+        event->ignore();
+        return;
+    }
     if (aging && aging->isRunning()) {
         aging->stopTest();
         event->ignore();

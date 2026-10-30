@@ -3,11 +3,36 @@
 # 1. 自动读取并获取 BOARD_ID
 BOARD_ID=$(cat /proc/device-tree/compatible 2>/dev/null | tr '\0' '\n' | head -1 | cut -d ',' -f2 | cut -d '-' -f2-)
 
+
 echo "=== 开始网口测试 ==="
 echo "[INFO] 当前检测到的 BOARD_ID: [$BOARD_ID]"
 
 # 2. 根据 BOARD_ID 动态配置网口参数（请按实际板卡需求修改）
-case "$BOARD_ID" in  "armsom-cm5-io")
+case "$BOARD_ID" in
+    "armsom-aim7-io")
+        export LC_ALL=C
+        fail() { echo "[FAIL] $*"; exit 1; }
+        pass() { echo "[PASS] $*"; exit 0; }
+        need() { command -v "$1" >/dev/null || fail "缺少命令: $1"; }
+        [ "$(id -u)" -eq 0 ] || fail '请通过 sudo 运行测试'
+        aim7_eth_test() {
+            need ip; need ping
+            local iface=end0 gateway speed
+            [ -d /sys/class/net/$iface ] || fail '未发现板载网口 end0'
+            [ $(cat /sys/class/net/$iface/carrier) = 1 ] || fail '网线未连接'
+            speed=$(cat /sys/class/net/$iface/speed)
+            [ $speed = 1000 ] || fail "网口协商速率为 ${speed}Mbps，要求1000Mbps"
+            ip -4 -o addr show dev "$iface" scope global | grep -q 'inet ' || fail '网口未获取IPv4地址'
+            gateway=$(ip -4 route show default dev "$iface" | awk '/via/ {print $3; exit}')
+            [ -n "$gateway" ] || fail '网口没有默认网关'
+            echo "[INFO] $iface ${speed}Mbps，测试网关 $gateway"
+            ping -I "$iface" -c 3 -W 2 "$gateway" || fail '绑定有线网口的网关连通测试失败'
+            pass '千兆网口及网络连通性正常'
+        }
+        aim7_eth_test "$@"
+        exit $?
+        ;;
+  "armsom-cm5-io")
         IFACE="end0"
         EXPECTED_SPEED=1000
         TARGET_IP="192.168.10.1"

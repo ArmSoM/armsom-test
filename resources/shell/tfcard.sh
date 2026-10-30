@@ -2,11 +2,36 @@
 
 # 1. 获取当前板卡型号 (BOARD_ID)
 BOARD_ID=$(cat /proc/device-tree/compatible 2>/dev/null | tr '\0' '\n' | head -1 | cut -d ',' -f2 | cut -d '-' -f2-)
+
 echo "[TFCard Check] 当前板卡型号: ${BOARD_ID}"
 
 # 2. 根据不同板型指定 TF 卡对应的块设备节点
 # 注：根据 RK3588 / RK3576 / RK3568 等不同总线设计，SDMMC 节点可能有所不同
 case "$BOARD_ID" in
+    "armsom-aim7-io")
+        export LC_ALL=C
+        fail() { echo "[FAIL] $*"; exit 1; }
+        pass() { echo "[PASS] $*"; exit 0; }
+        need() { command -v "$1" >/dev/null || fail "缺少命令: $1"; }
+        [ "$(id -u)" -eq 0 ] || fail '请通过 sudo 运行测试'
+        aim7_tfcard_test() {
+            need dd
+            local d dev sectors
+            for d in /sys/class/block/mmcblk*; do
+                [ -f "$d/device/type" ] || continue
+                [ $(cat "$d/device/type") = SD ] || continue
+                dev=/dev/${d##*/}; sectors=$(cat "$d/size")
+                [ -b "$dev" ] && [ $sectors -gt 0 ] || fail 'SD卡容量或块设备异常'
+                echo "[INFO] SD卡: $dev，容量$((sectors/2048))MiB，只读验证前1MiB"
+                dd if="$dev" of=/dev/null bs=4096 count=256 iflag=direct status=none || fail 'SD卡读取失败'
+                pass 'TF卡识别、容量及读取正常（未写入或格式化）'
+            done
+            fail '未检测到SD卡，请插入TF卡后重新测试；重启前请拔卡'
+        }
+        aim7_tfcard_test "$@"
+        exit $?
+        ;;
+
     "armsom-cm5-io")
         DEV_NODE="/dev/mmcblk1"
         ;;

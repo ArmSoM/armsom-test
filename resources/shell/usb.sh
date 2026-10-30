@@ -3,8 +3,42 @@
 # 1. 统一解析 BOARD_ID
 BOARD_ID=$(cat /proc/device-tree/compatible 2>/dev/null | tr '\0' '\n' | head -1 | cut -d ',' -f2 | cut -d '-' -f2-)
 
+
 # 2. 根据不同板卡设置需求
 case "$BOARD_ID" in
+    "armsom-aim7-io")
+        export LC_ALL=C
+        fail() { echo "[FAIL] $*"; exit 1; }
+        pass() { echo "[PASS] $*"; exit 0; }
+        need() { command -v "$1" >/dev/null || fail "缺少命令: $1"; }
+        [ "$(id -u)" -eq 0 ] || fail '请通过 sudo 运行测试'
+        aim7_usb_test() {
+            local d intf cls speed hid proto total=0 super=0 hids=0
+            for d in /sys/bus/usb/devices/*; do
+                [ -f "$d/idVendor" ] && [ -f "$d/speed" ] || continue
+                cls=$(cat "$d/bDeviceClass")
+                [ $cls != 09 ] || continue # Exclude root hubs and carrier hubs.
+                # AX200 Bluetooth is internal, not a Type-A test device.
+                [ $(cat "$d/idVendor"):$(cat "$d/idProduct") != 8087:0029 ] || continue
+                total=$((total+1)); speed=$(cat "$d/speed"); hid=0
+                if awk -v s="$speed" 'BEGIN {exit !(s>=5000)}'; then super=$((super+1)); fi
+                for intf in "$d":*; do
+                    [ -f "$intf/bInterfaceClass" ] || continue
+                    [ $(cat "$intf/bInterfaceClass") = 03 ] || continue
+                    proto=$(cat "$intf/bInterfaceProtocol")
+                    [ $proto = 01 ] || [ $proto = 02 ] && hid=1
+                done
+                hids=$((hids+hid)) # Count physical devices once, not HID interfaces.
+                echo "[INFO] ${d##*/} $(cat "$d/idVendor"):$(cat "$d/idProduct") speed=${speed}Mbps keyboard/mouse=$hid"
+            done
+            echo "[INFO] USB设备=$total，USB3=$super，键鼠设备=$hids；要求 >=4、>=2、>=2"
+            [ "$total" -ge 4 ] && [ "$super" -ge 2 ] && [ "$hids" -ge 2 ] || fail 'USB数量、速率或键鼠数量未达标'
+            pass 'USB检测通过'
+        }
+        aim7_usb_test "$@"
+        exit $?
+        ;;
+
     "armsom-cm5-io")
         REQ_USB2_3_COUNT=2 # 要求 USB2.0 + USB3.0 设备总数达到 2 个
         REQ_USB3_COUNT=0

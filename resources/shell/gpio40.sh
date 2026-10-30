@@ -34,7 +34,62 @@
 # board_model=$(cat /proc/device-tree/model)
 BOARD_ID=$(cat /proc/device-tree/compatible | tr '\0' '\n' | head -1 | cut -d ',' -f2 | cut -d '-' -f2-)
 
+
 case "$BOARD_ID" in
+    "armsom-aim7-io")
+        export LC_ALL=C
+        fail() { echo "[FAIL] $*"; exit 1; }
+        pass() { echo "[PASS] $*"; exit 0; }
+        need() { command -v "$1" >/dev/null || fail "缺少命令: $1"; }
+        [ "$(id -u)" -eq 0 ] || fail '请通过 sudo 运行测试'
+        aim7_gpio_test() {
+            # Physical pin:Linux GPIO. Pins shared with RTC/cameras are intentionally omitted.
+            # Omit 3/5 (I2C4 RTC+CAM1), 11/36 (OV reset), 15 (CAM3 PWDN),
+            # 27/28 (I2C2 CAM0), 31/33 (OV MCLK). PWM10 pin32 is reserved too.
+            local mapping='7:128 8:46 10:47 12:129 13:58 16:61 18:59 19:42 21:41 22:56 23:43 24:44 26:45 29:103 35:130 37:57 38:133 40:137'
+            echo "[INFO] AIM7 40PIN 可测试物理引脚:GPIO：$mapping"
+            [ "${1:-}" = --run-gpio ] || { echo '[INFO] 仅列出引脚；执行 gpio40.sh --run-gpio 后才会操作GPIO。接LED治具人工判断。'; return 0; }
+            local pinmux=/sys/kernel/debug/pinctrl/pinctrl-rockchip-pinctrl/pinmux-pins
+            [ -r "$pinmux" ] || fail '无法检查pinctrl占用，拒绝操作GPIO'
+            need flock
+            exec 8>/run/armsom-aim7-gpio.lock
+            flock -n 8 || fail '40PIN测试正在运行'
+            local owned='' entry pin gpio line i val
+            cleanup_gpio() {
+                local g
+                for g in $owned; do
+                    echo in > "/sys/class/gpio/gpio$g/direction" 2>/dev/null || :
+                    echo "$g" > /sys/class/gpio/unexport 2>/dev/null || :
+                done
+            }
+            trap cleanup_gpio EXIT
+            trap 'exit 130' INT TERM HUP
+            for entry in $mapping; do
+                pin=${entry%:*}; gpio=${entry#*:}
+                line=$(grep -E "^pin $gpio " "$pinmux")
+                if ! printf '%s\n' "$line" | grep -Fq '(MUX UNCLAIMED)' || ! printf '%s\n' "$line" | grep -Fq '(GPIO UNCLAIMED)' || [ -d /sys/class/gpio/gpio$gpio ]; then
+                    echo "[SKIP] PIN$pin GPIO$gpio 已被占用，不改复用/方向"; continue
+                fi
+                echo "$gpio" > /sys/class/gpio/export || fail "GPIO$gpio导出失败"
+                owned="$owned $gpio"
+                echo low > "/sys/class/gpio/gpio$gpio/direction" || fail "GPIO$gpio方向设置失败"
+                echo "[INFO] PIN$pin GPIO$gpio 已加入LED测试"
+            done
+            [ -n "$owned" ] || fail '没有可用GPIO'
+            for i in 1 2 3 4 5; do
+                for val in 1 0; do
+                    for gpio in $owned; do
+                        echo "$val" > "/sys/class/gpio/gpio$gpio/value" || fail "GPIO$gpio写入失败"
+                    done
+                    sleep 0.5
+                done
+            done
+            echo '[INFO] LED闪烁完成，已释放本脚本GPIO；请人工判定40PIN是否通过'
+        }
+        aim7_gpio_test "$@"
+        exit $?
+        ;;
+
 	"armsom-cm5-io")
   # gpio 111 112 开启摄像头的时候会占用,  28 29 调试串口，94 风扇
 		GPIO40="140 141 20 97 98 96 126 89 88 99"
@@ -68,7 +123,7 @@ export_gpio() {
 out_gpio() {
   for IN in $GPIOS ; do
     DIR=/sys/class/gpio/gpio$IN/direction
-    if [ -f $DIR ] ; then
+    if [ -f "$DIR" ] ; then
       echo  out > $DIR
     fi
   done
@@ -77,7 +132,7 @@ out_gpio() {
 hi_gpio() {
   for IN in $GPIOS ; do
     VALUE=/sys/class/gpio/gpio$IN/value
-    if [ -f $VALUE ] ; then
+    if [ -f "$VALUE" ] ; then
       echo 1 > $VALUE
     fi
   done
@@ -88,7 +143,7 @@ on_off_led()
 ONOFF=$1
   for IN in $GPIOS ; do
     VALUE=/sys/class/gpio/gpio$IN/value
-    if [ -f $VALUE ] ; then
+    if [ -f "$VALUE" ] ; then
       echo $ONOFF > $VALUE
       sleep .1
     fi

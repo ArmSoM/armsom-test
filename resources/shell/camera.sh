@@ -6,6 +6,7 @@ LOG=$(dmesg)
 # 2. 从设备树获取当前板型 BOARD_ID
 BOARD_ID=$(cat /proc/device-tree/compatible 2>/dev/null | tr '\0' '\n' | head -1 | cut -d ',' -f2 | cut -d '-' -f2-)
 
+
 echo "[Info] 当前识别出的板卡类型: ${BOARD_ID}"
 
 # 3. 检查传感器的具体函数
@@ -21,6 +22,33 @@ check_imx219() {
 
 # 4. 根据不同的板子类型执行不同的检测逻辑
 case "$BOARD_ID" in
+    "armsom-aim7-io")
+        export LC_ALL=C
+        fail() { echo "[FAIL] $*"; exit 1; }
+        pass() { echo "[PASS] $*"; exit 0; }
+        need() { command -v "$1" >/dev/null || fail "缺少命令: $1"; }
+        [ "$(id -u)" -eq 0 ] || fail '请通过 sudo 运行测试'
+        aim7_camera_test() {
+            local bus sensor tag driver n found count=0
+            for tag in imx219:2-0010 imx219:4-0010 ov13850:3-0010 ov13850:6-0010; do
+                sensor=${tag%%:*}; bus=${tag#*:}; driver=/sys/bus/i2c/devices/$bus/driver
+                [ -L "$driver" ] && [ $(basename "$(readlink -f "$driver")") = "$sensor" ] || fail "$sensor $bus 未成功绑定驱动"
+                found=0
+                for n in /sys/class/video4linux/v4l-subdev*/name; do
+                    [ -r "$n" ] || continue
+                    grep -Eq "(^|_)${sensor} ${bus}$" "$n" && found=1
+                done
+                [ "$found" -eq 1 ] || fail "$sensor $bus 没有注册V4L2 sensor子设备"
+                echo "[PASS] $sensor $bus 已识别并注册sensor子设备"
+                count=$((count+1))
+            done
+            [ "$count" -eq 4 ] || fail '要求2个IMX219和2个OV13850'
+            pass '四摄检测通过：IMX219 x2，OV13850 x2'
+        }
+        aim7_camera_test "$@"
+        exit $?
+        ;;
+
     "armsom-cm5-io")
         echo "正在对 cm5-io 进行摄像头检测..."
         # 例如：cm5-io 支持 imx219 或 ov13850 (可根据实际需求调整顺序或逻辑)
