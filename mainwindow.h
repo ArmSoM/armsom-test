@@ -6,6 +6,9 @@
 #include <QPushButton>
 #include <QHeaderView>
 
+class AgingWidget;
+class QCloseEvent;
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -31,6 +34,9 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+protected:
+    void closeEvent(QCloseEvent *event) override;
+
 private slots:
     void on_TestButton_clicked();
     
@@ -55,6 +61,7 @@ private:
     void initTestTable(int condition);
     void setRowTestResult(int row, bool isSuccess);
 
+    AgingWidget *aging = nullptr;
     Ui::MainWindow *ui;
     int condition = -1;
     int m_runningThreadsCount = 0;

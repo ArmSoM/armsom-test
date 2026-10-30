@@ -1,6 +1,9 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "testthread.h"
+#include "agingwidget.h"
+#include <QTabBar>
+#include <QCloseEvent>
 
 #include <QFile>
 #include <QDebug>
@@ -20,6 +23,16 @@ int getBoardCondition()
     QByteArray data = file.readAll();
     file.close();
 
+    // Allwinner Sige6 may use "armsom,sige6" without a Rockchip SoC prefix.
+    // Check every compatible entry before the legacy SoC-prefix parsing.
+    for (const QByteArray &entry : data.split('\0')) {
+        const QString compatibleId = QString::fromUtf8(entry).trimmed().section(',', -1);
+        if (compatibleId == "sige6" || compatibleId == "armsom-sige6"
+                || compatibleId.endsWith("-sige6")) {
+            return 4;
+        }
+    }
+
     QString firstCompatible = QString::fromUtf8(data.split('\0').first());
     QString boardId;
 
@@ -38,7 +51,7 @@ int getBoardCondition()
         return 2;
     } else if (boardId == "armsom-p2pro") {
         return 3;
-    } else if (boardId == "sige6") {
+    } else if (boardId == "sige6" || boardId == "armsom-sige6") {
         return 4;
     } else if (boardId == "armsom-sige7s") {
         return 5;
@@ -202,6 +215,28 @@ void MainWindow::initUI()
 
     // 4. 填充表格内容
     initTestTable(this->condition);
+
+    // Sige6 keeps the original functional-test UI without DDR aging.
+    if (this->condition == 4) return;
+
+    // Add only a page selector; keep the original widgets and their geometry.
+    auto *tabs = new QTabBar(ui->centralwidget);
+    tabs->setObjectName("testTabs");
+    tabs->setGeometry(650, 30, 450, 30);
+    tabs->setExpanding(false);
+    tabs->addTab(QStringLiteral("功能测试"));
+    tabs->addTab(QStringLiteral("老化测试"));
+    aging = new AgingWidget(ui->centralwidget);
+    aging->setGeometry(650, 67, 450, 644);
+    aging->hide();
+    connect(tabs, &QTabBar::currentChanged, this, [this](int index) {
+        ui->tableWidget->setVisible(index == 0);
+        ui->TestButton->setVisible(index == 0);
+        aging->setVisible(index == 1);
+    });
+    connect(aging, &AgingWidget::runningChanged, this, [this](bool running) {
+        ui->TestButton->setEnabled(!running && m_runningThreadsCount == 0);
+    });
 }
 
 void MainWindow::initTestTable(int condition)
@@ -274,6 +309,8 @@ void MainWindow::setRowTestResult(int row, bool isSuccess)
 // 一键测试按钮逻辑
 void MainWindow::on_TestButton_clicked()
 {
+    if (aging && aging->isRunning()) return;
+    if (aging) aging->setEnabled(false);
     ui->TestButton->setEnabled(false);
     m_runningThreadsCount = 0;
 
@@ -291,6 +328,7 @@ void MainWindow::on_TestButton_clicked()
 
     if (m_runningThreadsCount == 0) {
         ui->TestButton->setEnabled(true);
+        if (aging) aging->setEnabled(true);
         return;
     }
 
@@ -321,6 +359,7 @@ void MainWindow::on_TestButton_clicked()
             m_runningThreadsCount--;
             if (m_runningThreadsCount <= 0) {
                 ui->TestButton->setEnabled(true);
+                if (aging) aging->setEnabled(true);
             }
             thread->deleteLater();
         });
@@ -376,3 +415,13 @@ void MainWindow::on_audiopass_clicked() {}
 void MainWindow::on_hdmiinpass_clicked() {}
 void MainWindow::on_mipipass_clicked() {}
 void MainWindow::on_gpiopass_clicked() {}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    if (aging && aging->isRunning()) {
+        aging->stopTest();
+        event->ignore();
+        return;
+    }
+    QMainWindow::closeEvent(event);
+}
