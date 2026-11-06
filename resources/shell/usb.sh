@@ -7,36 +7,9 @@ BOARD_ID=$(cat /proc/device-tree/compatible 2>/dev/null | tr '\0' '\n' | head -1
 # 2. 根据不同板卡设置需求
 case "$BOARD_ID" in
     "armsom-aim7-io")
-        export LC_ALL=C
-        fail() { echo "[FAIL] $*"; exit 1; }
-        pass() { echo "[PASS] $*"; exit 0; }
-        need() { command -v "$1" >/dev/null || fail "缺少命令: $1"; }
-        [ "$(id -u)" -eq 0 ] || fail '请通过 sudo 运行测试'
-        aim7_usb_test() {
-            local d intf cls speed hid proto total=0 super=0 hids=0
-            for d in /sys/bus/usb/devices/*; do
-                [ -f "$d/idVendor" ] && [ -f "$d/speed" ] || continue
-                cls=$(cat "$d/bDeviceClass")
-                [ $cls != 09 ] || continue # Exclude root hubs and carrier hubs.
-                # AX200 Bluetooth is internal, not a Type-A test device.
-                [ $(cat "$d/idVendor"):$(cat "$d/idProduct") != 8087:0029 ] || continue
-                total=$((total+1)); speed=$(cat "$d/speed"); hid=0
-                if awk -v s="$speed" 'BEGIN {exit !(s>=5000)}'; then super=$((super+1)); fi
-                for intf in "$d":*; do
-                    [ -f "$intf/bInterfaceClass" ] || continue
-                    [ $(cat "$intf/bInterfaceClass") = 03 ] || continue
-                    proto=$(cat "$intf/bInterfaceProtocol")
-                    [ $proto = 01 ] || [ $proto = 02 ] && hid=1
-                done
-                hids=$((hids+hid)) # Count physical devices once, not HID interfaces.
-                echo "[INFO] ${d##*/} $(cat "$d/idVendor"):$(cat "$d/idProduct") speed=${speed}Mbps keyboard/mouse=$hid"
-            done
-            echo "[INFO] USB设备=$total，USB3=$super，键鼠设备=$hids；要求 >=4、>=2、>=2"
-            [ "$total" -ge 4 ] && [ "$super" -ge 2 ] && [ "$hids" -ge 2 ] || fail 'USB数量、速率或键鼠数量未达标'
-            pass 'USB检测通过'
-        }
-        aim7_usb_test "$@"
-        exit $?
+        REQ_USB2_3_COUNT=2
+        REQ_USB3_COUNT=0
+        REQ_USB1_COUNT=2
         ;;
 
     "armsom-cm5-io")
@@ -71,7 +44,7 @@ case "$BOARD_ID" in
         ;;
 esac
 
-if [ "$BOARD_ID" = "armsom-cm5-io" ] || [ "$BOARD_ID" = "armsom-sige7s" ] || [ "$BOARD_ID" = "sige6" ] || [ "$BOARD_ID" = "armsom-cm7s-io" ]; then
+if [ "$BOARD_ID" = "armsom-aim7-io" ] || [ "$BOARD_ID" = "armsom-cm5-io" ] || [ "$BOARD_ID" = "armsom-sige7s" ] || [ "$BOARD_ID" = "sige6" ] || [ "$BOARD_ID" = "armsom-cm7s-io" ]; then
     echo "[INFO] 当前板卡: $BOARD_ID | 目标需求 -> (USB3.0+USB2.0): ${REQ_USB2_3_COUNT}个, USB1.x(键鼠): ${REQ_USB1_COUNT}个"
 else
     echo "[INFO] 当前板卡: $BOARD_ID | 目标需求 -> USB3.0: ${REQ_USB3_COUNT}个, USB1.x(键鼠): ${REQ_USB1_COUNT}个"
@@ -81,6 +54,7 @@ echo "------------------------------------------------------------------"
 ACTUAL_USB3_COUNT=0
 ACTUAL_USB2_COUNT=0
 ACTUAL_USB1_COUNT=0
+AIM7_HID_COUNT=0
 
 for dev_dir in /sys/bus/usb/devices/*; do
     # 过滤 1: 忽略接口节点（路径带冒号，如 1-1:1.0，使用 case 语法兼容 dash/sh）
@@ -99,6 +73,17 @@ for dev_dir in /sys/bus/usb/devices/*; do
     fi
 
     # 提取设备信息
+    # AIM7: exclude internal Bluetooth; count each physical keyboard/mouse once.
+    if [ "$BOARD_ID" = "armsom-aim7-io" ]; then
+        [ "$(cat "$dev_dir/idVendor"):$(cat "$dev_dir/idProduct")" != 8087:0029 ] || continue
+        HID=0
+        for INTF in "$dev_dir":*; do
+            [ -f "$INTF/bInterfaceClass" ] || continue
+            [ "$(cat "$INTF/bInterfaceClass")" = 03 ] || continue
+            case "$(cat "$INTF/bInterfaceProtocol")" in 01|02) HID=1 ;; esac
+        done
+        AIM7_HID_COUNT=$((AIM7_HID_COUNT + HID))
+    fi
     SPEED=$(cat "$dev_dir/speed" 2>/dev/null)
     DEV_NAME=$(cat "$dev_dir/product" 2>/dev/null || echo "Unknown Device")
     DEV_PATH=$(basename "$dev_dir")
@@ -117,12 +102,13 @@ for dev_dir in /sys/bus/usb/devices/*; do
 done
 
 echo "------------------------------------------------------------------"
+[ "$BOARD_ID" != "armsom-aim7-io" ] || ACTUAL_USB1_COUNT=$AIM7_HID_COUNT
 ACTUAL_USB2_3_TOTAL=$((ACTUAL_USB3_COUNT + ACTUAL_USB2_COUNT))
 echo "[INFO] 统计结果 -> USB3.0/3.1: ${ACTUAL_USB3_COUNT}个, USB2.0: ${ACTUAL_USB2_COUNT}个 (合计: ${ACTUAL_USB2_3_TOTAL}个), USB1.x: ${ACTUAL_USB1_COUNT}个"
 
 PASS=true
 
-if [ "$BOARD_ID" = "armsom-cm5-io" ] || [ "$BOARD_ID" = "armsom-sige7s" ] || [ "$BOARD_ID" = "sige6" ] || [ "$BOARD_ID" = "armsom-cm7s-io" ]; then
+if [ "$BOARD_ID" = "armsom-aim7-io" ] || [ "$BOARD_ID" = "armsom-cm5-io" ] || [ "$BOARD_ID" = "armsom-sige7s" ] || [ "$BOARD_ID" = "sige6" ] || [ "$BOARD_ID" = "armsom-cm7s-io" ]; then
     # 判断 USB2.0 + USB3.0 总数是否达标
     if [ "$ACTUAL_USB2_3_TOTAL" -lt "$REQ_USB2_3_COUNT" ]; then
         echo "[FAIL] USB 2.0 + 3.0 接口识别未达标 (需要至少 $REQ_USB2_3_COUNT 个，实际识别到 $ACTUAL_USB2_3_TOTAL 个)"

@@ -13,34 +13,23 @@ echo "[INFO] 当前检测到的板卡型号: $BOARD_ID"
 # 2. 根据不同的板卡型号匹配 PCIe BDF 地址及设备节点
 case "$BOARD_ID" in
     "armsom-aim7-io")
-        export LC_ALL=C
-        fail() { echo "[FAIL] $*"; exit 1; }
-        pass() { echo "[PASS] $*"; exit 0; }
-        need() { command -v "$1" >/dev/null || fail "缺少命令: $1"; }
-        [ "$(id -u)" -eq 0 ] || fail '请通过 sudo 运行测试'
-        aim7_m2_test() {
-            need nmcli; need iw; need timeout
-            local p net iface scan
-            for p in /sys/bus/pci/devices/*; do
-                [ -f "$p/vendor" ] && [ -f "$p/device" ] || continue
-                [ $(cat "$p/vendor"):$(cat "$p/device") = 0x8086:0x2723 ] || continue
-                [ -L "$p/driver" ] && [ $(basename "$(readlink -f "$p/driver")") = iwlwifi ] || fail 'AX200未绑定iwlwifi驱动，请检查iwlwifi-cc-a0-72.ucode固件'
-                for net in "$p"/net/*; do
-                    [ -d "$net" ] || continue
-                    iface=${net##*/}
-                    [ -d /sys/class/net/$iface/phy80211 ] || continue
-                    nmcli radio wifi on || fail 'WiFi无法开启，请检查rfkill'
-                    scan=$(timeout 25 nmcli -g BSSID device wifi list ifname "$iface" --rescan yes) || fail 'AX200无线扫描失败'
-                    [ -n "$scan" ] || fail '未扫描到无线AP，请检查天线及周边AP'
-                    echo "[INFO] AX200 ${p##*/}，驱动iwlwifi，无线接口$iface，扫描到$(printf '%s\n' "$scan" | wc -l)个AP"
-                    pass 'M.2 AX200枚举、驱动加载和无线扫描正常'
-                done
-                fail 'AX200未生成无线接口，检查固件及驱动日志'
+        # AIM7 uses AX200 Wi-Fi instead of an NVMe SSD.
+        for PCI in /sys/bus/pci/devices/*; do
+            [ "$(cat "$PCI/vendor" 2>/dev/null):$(cat "$PCI/device" 2>/dev/null)" = 0x8086:0x2723 ] || continue
+            [ "$(basename "$(readlink -f "$PCI/driver")")" = iwlwifi ] || {
+                echo "[FAIL] AX200 未绑定 iwlwifi，请检查驱动和固件"; exit 1;
+            }
+            for NET in "$PCI"/net/*; do
+                IFACE=${NET##*/}
+                [ -d "/sys/class/net/$IFACE/phy80211" ] || continue
+                nmcli radio wifi on || exit 1
+                SCAN=$(timeout 25 nmcli -g BSSID device wifi list ifname "$IFACE" --rescan yes) || exit 1
+                [ -n "$SCAN" ] || { echo "[FAIL] AX200 未扫描到 AP"; exit 1; }
+                echo "[PASS] AX200 ${PCI##*/}，$IFACE 无线扫描正常"; exit 0
             done
-            fail 'M.2未发现Intel AX200 (8086:2723)'
-        }
-        aim7_m2_test "$@"
-        exit $?
+            echo "[FAIL] AX200 无无线接口"; exit 1
+        done
+        echo "[FAIL] 未找到 AX200 (8086:2723)"; exit 1
         ;;
 
     "armsom-cm5-io")

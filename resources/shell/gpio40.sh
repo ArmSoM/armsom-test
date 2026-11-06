@@ -45,7 +45,7 @@ case "$BOARD_ID" in
         aim7_gpio_test() {
             # Physical pin:Linux GPIO. Pins shared with RTC/cameras are intentionally omitted.
             # Omit 3/5 (I2C4 RTC+CAM1), 11/36 (OV reset), 15 (CAM3 PWDN),
-            # 27/28 (I2C2 CAM0), 31/33 (OV MCLK). PWM10 pin32 is reserved too.
+            # 27/28 (I2C2 CAM0), 31/33 (OV MCLK). Pin32 (GPIO96/PWM10) is reserved for LCD and never driven here.
             local mapping='7:128 8:46 10:47 12:129 13:58 16:61 18:59 19:42 21:41 22:56 23:43 24:44 26:45 29:103 35:130 37:57 38:133 40:137'
             echo "[INFO] AIM7 40PIN 可测试物理引脚:GPIO：$mapping"
             [ "${1:-}" = --run-gpio ] || { echo '[INFO] 仅列出引脚；执行 gpio40.sh --run-gpio 后才会操作GPIO。接LED治具人工判断。'; return 0; }
@@ -76,7 +76,8 @@ case "$BOARD_ID" in
                 echo "[INFO] PIN$pin GPIO$gpio 已加入LED测试"
             done
             [ -n "$owned" ] || fail '没有可用GPIO'
-            for i in 1 2 3 4 5; do
+            echo '[INFO] LED 将闪烁约 10 秒，可在结束后再次点击开始重测'
+            for i in 1 2 3 4 5 6 7 8 9 10; do
                 for val in 1 0; do
                     for gpio in $owned; do
                         echo "$val" > "/sys/class/gpio/gpio$gpio/value" || fail "GPIO$gpio写入失败"
@@ -84,6 +85,10 @@ case "$BOARD_ID" in
                     sleep 0.5
                 done
             done
+            # EXIT runs after this function returns, when local owned no longer exists.
+            # Release here while its GPIO list is still in scope.
+            cleanup_gpio
+            trap - EXIT INT TERM HUP
             echo '[INFO] LED闪烁完成，已释放本脚本GPIO；请人工判定40PIN是否通过'
         }
         aim7_gpio_test "$@"

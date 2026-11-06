@@ -7,29 +7,7 @@ BOARD_ID=$(cat /proc/device-tree/compatible 2>/dev/null | tr '\0' '\n' | head -1
 # 2. 根据 BOARD_ID 匹配 RTC 芯片所在的 I2C 总线标识
 case "$BOARD_ID" in
     "armsom-aim7-io")
-        export LC_ALL=C
-        fail() { echo "[FAIL] $*"; exit 1; }
-        pass() { echo "[PASS] $*"; exit 0; }
-        need() { command -v "$1" >/dev/null || fail "缺少命令: $1"; }
-        [ "$(id -u)" -eq 0 ] || fail '请通过 sudo 运行测试'
-        aim7_rtc_test() {
-            need hwclock
-            local r first second delta
-            for r in /sys/class/rtc/rtc*; do
-                [ -f "$r/name" ] || continue
-                [ "$(cat "$r/name")" = 'rtc-hym8563 4-0051' ] || continue
-                hwclock --show --rtc "/dev/${r##*/}" || fail 'RTC读取失败或时间无效，请先校时'
-                first=$(cat "$r/since_epoch") || fail 'RTC计时读取失败'
-                sleep 2
-                second=$(cat "$r/since_epoch") || fail 'RTC计时读取失败'
-                delta=$((second-first))
-                [ "$delta" -ge 1 ] && [ "$delta" -le 5 ] || fail "RTC未正常走时: delta=$delta"
-                pass "RTC位于i2c4，读取及走时正常（${delta}s）"
-            done
-            fail '未发现i2c4上的HYM8563 RTC'
-        }
-        aim7_rtc_test "$@"
-        exit $?
+        rtc_string="rtc-hym8563 4-0051"
         ;;
 
     "armsom-cm5-io")
@@ -42,6 +20,23 @@ case "$BOARD_ID" in
         rtc_string="rtc-hym8563 6-0051"
         ;;
 esac
+
+# AIM7 also checks the live RTC and verifies that its counter advances.
+if [ "$BOARD_ID" = "armsom-aim7-io" ]; then
+    for RTC in /sys/class/rtc/rtc*; do
+        [ "$(cat "$RTC/name" 2>/dev/null)" = "$rtc_string" ] || continue
+        hwclock --show --rtc "/dev/${RTC##*/}" || exit 1
+        FIRST=$(cat "$RTC/since_epoch") || exit 1
+        sleep 2
+        SECOND=$(cat "$RTC/since_epoch") || exit 1
+        DELTA=$((SECOND - FIRST))
+        [ "$DELTA" -ge 1 ] && [ "$DELTA" -le 5 ] && {
+            echo "[PASS] RTC 读取正常，计时增加 ${DELTA}s"; exit 0;
+        }
+        echo "[FAIL] RTC 未正常计时"; exit 1
+    done
+    echo "[FAIL] 未找到 $rtc_string"; exit 1
+fi
 
 # 3. 检测 dmesg 日志中是否有该 RTC 的有效注册状态
 if dmesg | grep "$rtc_string" | grep -qE "registered|valid"; then

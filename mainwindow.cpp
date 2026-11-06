@@ -304,6 +304,13 @@ void MainWindow::initTestTable(int condition)
                 layout->addWidget(passBtn);
                 connect(startBtn, &QPushButton::clicked, this, [this, startBtn, passBtn]() {
                     if (m_runningThreadsCount || (aging && aging->isRunning())) return;
+                    const int row = passBtn->property("row").toInt();
+                    // Every run requires fresh visual confirmation, including after a pass.
+                    for (int col = 0; col < 4; ++col) {
+                        if (auto *cell = ui->tableWidget->item(row, col))
+                            cell->setBackground(QBrush());
+                    }
+                    ui->tableWidget->item(row, 3)->setText(QStringLiteral("测试中"));
                     ++m_runningThreadsCount;
                     ui->TestButton->setEnabled(false);
                     if (aging) aging->setEnabled(false);
@@ -314,7 +321,11 @@ void MainWindow::initTestTable(int condition)
                     connect(thread, &TestThread::testFinished, this,
                         [this, passBtn](int, bool success) {
                             // A successful GPIO command still needs visual confirmation.
-                            if (!success) setRowTestResult(passBtn->property("row").toInt(), false);
+                            const int row = passBtn->property("row").toInt();
+                            if (success)
+                                ui->tableWidget->item(row, 3)->setText(QStringLiteral("等待人工确认"));
+                            else
+                                setRowTestResult(row, false);
                         });
                     connect(thread, &TestThread::finished, this, [this, thread, startBtn, passBtn]() {
                         --m_runningThreadsCount;
