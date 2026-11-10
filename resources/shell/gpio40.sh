@@ -1,172 +1,144 @@
 #!/bin/bash
-#GPIO40_NO_IGPIO="13 14 3 17 58 25 27 7 4 5 6 8 12 11 100 21 54 59 57 22 23 24 60"
-#IGPIOSORG="21 3 2 5 4 9"
-#IGPIO + 101 = GPIO
-#IGPIOS="122  104 103 106 105 110"
-#GPIO40="13 14 122 104 103 3 17 58 25 27 106 105 7 4 110 5 6 8 12 11 100 21 54 59 57 22 23 24 60"
-#BPI-M4 https://youtu.be/SVegH35v-_k
-# GPIO40="17 16 21 9 8 42 3 43 44 11 10 31 18 47 19 20 22 45 23 41 40 50 4 2 53 34 5 6"
-# GPIOLED="128 97 98"
-# GPIO pin脚计算公式：pin = bank * 32 + number
-# GPIO 小组编号计算公式：number = group * 8 + X
-# 1 - VCC_IO                                    2 - VCC_5V0
-# 3 - I2C7_SDA_M3 = GPIO4_B3_u = 139            4 - VCC_5V0
-# 5 - I2C7_SCL_M3 = GPIO4_B2_u = 138            6 - GND
-# 7 - SPI1_CS1_M1 = GPIO3_C3_d = 115            8 - UART2_TX_M0
-# 9 - GND                                       10 - UART2_RX_M0
-# 11 - SPI1_CLK_M1 = GPIO3_C1_d = 113           12 - I2S2_SCLK_TX_M1 = GPIO3_B5_u = 109
-# 13 - SPI1_MOSI_M1 = GPIO3_B7_d = 111          14 - GND
-# 15 - SPI1_MISO_M1 = GPIO3_C0_d = 112          16 - UART8_RTSn_M1_BT = GPIO3_A4_d = 100
-# 17 - VCC_IO                                   18 - GPIO4_C4 = 148
-# 19 - SPI0-MOSI = GPIO1_B2_d = 42              20 - GND
-# 21 - SPI0-MISO = GPIO1_B1_d = 41              22 - SARADC_IN4
-# 23 - SPI0-CLK = GPIO1_B3_d = 43               24 - SPI0-CS0 = GPIO1_B4_d = 44
-# 25 - GND                                      26 - SPI0-CS1 = GPIO1_B5_d = 45
-# 27 - GPIO4-C6 = 150                           28 - GPIO4_C5 = 149
-# 29 - GPIO1-D7 = 63                            30 - GND
-# 31 - GPIO1_B7 = 47                            32 - SPI1_CS0_M1 = GPIO3_C2_d = 114
-# 33 - PWM8_M0 = GPIO3_A7_u = 103               34 - GND
-# 35 - I2S2_LRCK_TX_M1 = GPIO3_B6_d = 110       36 - I2S2_LRCK_RX_M1 = GPIO3_B1_d = 105
-# 37 - GPIO0-A0 = 0                             38 - I2S2_SDI_M1  = GPIO3_B2_d = 106
-# 39 - GND                                      40 - I2S2_SDO_M1 = GPIO3_B3_u = 107
-
-#通过将40pin导出为gpio，基于syfs控制gpio。让40pin接LED外设，通过40LED亮灭来测试40pin
-# board_model=$(cat /proc/device-tree/model)
-BOARD_ID=$(cat /proc/device-tree/compatible | tr '\0' '\n' | head -1 | cut -d ',' -f2 | cut -d '-' -f2-)
-
+# 40PIN LED治具测试：各板型在下面的 case 中配置 GPIO40，共用 gpio40_test()。
+#
+# 引脚配置：
+#   GPIO40 填 Linux GPIO 编号，不是40PIN排针的物理脚号；不要重复填写。
+#   Rockchip 编号 = bank * 32 + group * 8 + X，A/B/C/D 对应 group 0/1/2/3。
+#   例如 GPIO1_B2 = 1 * 32 + 1 * 8 + 2 = 42；Sige6 沿用全志的GPIO编号。
+#   电源、GND、调试串口及明确预留的外设引脚不加入列表（如 AIM7 PIN32）。
+#   新增板型时先核对原理图和设备树，在 case 中添加对应的 GPIO40 列表。
+#
+# 执行方法（需先接好LED治具）：
+#   bash gpio40.sh                  仅列出候选GPIO，不操作引脚。
+#   sudo bash gpio40.sh --run-gpio   开始闪烁；界面的“开始”按钮调用此命令。
+#
+# 共用检测流程：
+#   1. 使用 flock 防止重复并发运行，并读取 debugfs 的 pinmux-pins 检查占用。
+#   2. 仅操作 MUX 和 GPIO 均为 UNCLAIMED、且未被 sysfs 导出的候选引脚；
+#      已占用或无法唯一确认状态的引脚跳过，不强制修改外设复用。
+#      无法读取 pinctrl 信息或没有可用GPIO时，返回失败。
+#   3. 导出可用GPIO并设置输出低电平，然后统一高/低各0.5秒，循环10次，
+#      闪烁约10秒。正常结束、出错或收到可捕获的退出信号时，将本次导出的
+#      GPIO设为输入并释放；不接管其他程序已导出的GPIO，可再次点击开始重测。
+#   4. 脚本执行成功只代表闪烁流程完成，不能自动判定LED是否正常。
+#      界面显示“等待人工确认”，操作员观察后点击“通过”才标记测试通过。
+#
+# 依赖：Bash、root权限、flock、sysfs GPIO及可读取的debugfs pinctrl信息。
+export LC_ALL=C
+BOARD_ID=$(tr '\0' '\n' < /proc/device-tree/compatible | head -1 | cut -d, -f2)
+case "$BOARD_ID" in rk[0-9]*-*) BOARD_ID=${BOARD_ID#*-} ;; esac
 
 case "$BOARD_ID" in
-    "armsom-aim7-io")
-        export LC_ALL=C
-        fail() { echo "[FAIL] $*"; exit 1; }
-        pass() { echo "[PASS] $*"; exit 0; }
-        need() { command -v "$1" >/dev/null || fail "缺少命令: $1"; }
-        [ "$(id -u)" -eq 0 ] || fail '请通过 sudo 运行测试'
-        aim7_gpio_test() {
-            # Physical pin:Linux GPIO. Pins shared with RTC/cameras are intentionally omitted.
-            # Omit 3/5 (I2C4 RTC+CAM1), 11/36 (OV reset), 15 (CAM3 PWDN),
-            # 27/28 (I2C2 CAM0), 31/33 (OV MCLK). Pin32 (GPIO96/PWM10) is reserved for LCD and never driven here.
-            local mapping='7:128 8:46 10:47 12:129 13:58 16:61 18:59 19:42 21:41 22:56 23:43 24:44 26:45 29:103 35:130 37:57 38:133 40:137'
-            echo "[INFO] AIM7 40PIN 可测试物理引脚:GPIO：$mapping"
-            [ "${1:-}" = --run-gpio ] || { echo '[INFO] 仅列出引脚；执行 gpio40.sh --run-gpio 后才会操作GPIO。接LED治具人工判断。'; return 0; }
-            local pinmux=/sys/kernel/debug/pinctrl/pinctrl-rockchip-pinctrl/pinmux-pins
-            [ -r "$pinmux" ] || fail '无法检查pinctrl占用，拒绝操作GPIO'
-            need flock
-            exec 8>/run/armsom-aim7-gpio.lock
-            flock -n 8 || fail '40PIN测试正在运行'
-            local owned='' entry pin gpio line i val
-            cleanup_gpio() {
-                local g
-                for g in $owned; do
-                    echo in > "/sys/class/gpio/gpio$g/direction" 2>/dev/null || :
-                    echo "$g" > /sys/class/gpio/unexport 2>/dev/null || :
-                done
-            }
-            trap cleanup_gpio EXIT
-            trap 'exit 130' INT TERM HUP
-            for entry in $mapping; do
-                pin=${entry%:*}; gpio=${entry#*:}
-                line=$(grep -E "^pin $gpio " "$pinmux")
-                if ! printf '%s\n' "$line" | grep -Fq '(MUX UNCLAIMED)' || ! printf '%s\n' "$line" | grep -Fq '(GPIO UNCLAIMED)' || [ -d /sys/class/gpio/gpio$gpio ]; then
-                    echo "[SKIP] PIN$pin GPIO$gpio 已被占用，不改复用/方向"; continue
-                fi
-                echo "$gpio" > /sys/class/gpio/export || fail "GPIO$gpio导出失败"
-                owned="$owned $gpio"
-                echo low > "/sys/class/gpio/gpio$gpio/direction" || fail "GPIO$gpio方向设置失败"
-                echo "[INFO] PIN$pin GPIO$gpio 已加入LED测试"
-            done
-            [ -n "$owned" ] || fail '没有可用GPIO'
-            echo '[INFO] LED 将闪烁约 10 秒，可在结束后再次点击开始重测'
-            for i in 1 2 3 4 5 6 7 8 9 10; do
-                for val in 1 0; do
-                    for gpio in $owned; do
-                        echo "$val" > "/sys/class/gpio/gpio$gpio/value" || fail "GPIO$gpio写入失败"
-                    done
-                    sleep 0.5
-                done
-            done
-            # EXIT runs after this function returns, when local owned no longer exists.
-            # Release here while its GPIO list is still in scope.
-            cleanup_gpio
-            trap - EXIT INT TERM HUP
-            echo '[INFO] LED闪烁完成，已释放本脚本GPIO；请人工判定40PIN是否通过'
-        }
-        aim7_gpio_test "$@"
-        exit $?
+    armsom-aim7-io)
+        # Omit PIN3/5,11/36,15,27/28,31/33 (RTC/cameras), PIN32 (LCD).
+        GPIO40="128 46 47 129 58 61 59 42 41 56 43 44 45 103 130 57 133 137"
         ;;
-
-	"armsom-cm5-io")
-  # gpio 111 112 开启摄像头的时候会占用,  28 29 调试串口，94 风扇
-		GPIO40="140 141 20 97 98 96 126 89 88 99"
-		;;
-  "armsom-cm7s-io")
-  # gpio 13 14 调试串口
-		GPIO40="63 62 39 130 131 18 42 41 43 57 58 59 139 52 54 106 32 33 40
-            44 45 56 138 61 20 21"
-		;;
-  "sige6")
-  # gpio 354 355调试串口，94 风扇
-		GPIO40="313 312 356 357 358 359 359 108 109 107 315 362 321 360 322 325
-            320 32 33 326 106 111 314 361 110 324 323"
-		;;
-	*)
-		GPIO40="140 141 20 97 98 96 126 89 88 99" 
-		;;
+    armsom-cm5-io)
+        # CM5-IO V1.1 第7页 + CM5 V1.3 第11/12页；以下为物理PIN:GPIO。
+        # 3:140 5:141 7:20 16:89 18:88 19:97 21:98 23:96 24:99。
+        # 排除 PIN8/10 GPIO28/29（调试串口）；PIN22（ADC，不能作GPIO）。
+        # 排除 PIN27/29 GPIO111/112（CAM2 I2C）、PIN31 GPIO126（CAM2复位），
+        # PIN28 GPIO94（与风扇PWM共用）；不操作电源、GND和底板未连接脚：
+        # PIN11/12/13/15/26/32/33/35/36/37/38/40。
+        # PIN16/18 还复用红/绿LED控制、UART4、I2C6；被驱动占用时自动跳过。
+        GPIO40="140 141 20 89 88 97 98 96 99"
+        ;;
+    armsom-cm7s-io)
+        # J4, schematic V1.0 page8. GPIO13/14 (PIN8/10): debug UART.
+        # GPIO63/62 (PIN3/5) also carry CAM4/CAM3 clocks: skip when claimed.
+        GPIO40="63 62 39 130 131 18 42 41 43 57 58 59 139 52 54 106 32 33 40
+                44 45 56 138 61 20 21"
+        ;;
+    armsom-sige7)
+        # Sige7 V1.1 原理图第22页 J4，以下为物理PIN:GPIO。
+        # 3:139 5:138 7:115 11:113 12:109 13:112 15:111 18:148
+        # 19:42 21:41 23:43 24:44 26:45 27:150 28:149 29:63
+        # 32:114 33:103 35:110 36:105 38:106 40:107。
+        # 排除 PIN8/10（UART2调试串口）、PIN16（蓝牙UART8 RTS）、
+        # PIN22（ADC）、PIN31（摄像头时钟复用）、PIN37（REFCLK复用）、
+        # 电源和GND。已被驱动占用的候选GPIO在运行时跳过。
+        GPIO40="139 138 115 113 109 112 111 148 42 41 43 44 45 150 149
+                63 114 103 110 105 106 107"
+        ;;
+    armsom-sige7s)
+        # Sige7s V1.0 第23页 CON1，以实际网络名及SoC引脚定义为准，
+        # 不使用连接器符号内遗留的GPIO文字；以下为物理PIN:GPIO。
+        # 3:29 5:28 7:47 11:128 12:39 13:129 15:130 16:33 18:32
+        # 19:42 21:41 22:40 23:43 24:44 26:45 27:136 28:137
+        # 29:131 31:132 32:105 33:133 35:134 36:138 37:135 38:139 40:115。
+        # 排除 PIN8/10 GPIO13/14（UART2调试串口）、电源和GND。
+        # 当前SDK默认占用：PIN7 SPDIF、PIN16/18 UART6、PIN27/28 RTC I2C6、
+        # PIN32 风扇PWM2，公共函数会自动跳过，不关闭外设或强制修改复用。
+        # PIN3/5 I2C1、PIN19/21/23/24/26 SPI0、PIN29/31 UART0、
+        # PIN33/35 UART3、PIN36/38 CAN1、PIN40 PWM15若启用，也按占用跳过。
+        GPIO40="29 28 47 128 39 129 130 33 32 42 41 40 43 44 45
+                136 137 131 132 105 133 134 138 135 139 115"
+        ;;
+    sige6|armsom-sige6)
+        # GPIO354/355: debug UART; GPIO94: fan. Remove duplicate GPIO359.
+        GPIO40="313 312 356 357 358 359 108 109 107 315 362 321 360 322 325
+                320 32 33 326 106 111 314 361 110 324 323"
+        ;;
+    *) echo "[FAIL] 不支持的板型: $BOARD_ID"; exit 1 ;;
 esac
 
-GPIOS="$GPIO40"
+# One implementation for every board. Run in a subshell so EXIT cleanup keeps
+# access to its GPIO list on normal completion, error, and interruption alike.
+gpio40_test() (
+    fail() { echo "[FAIL] $*"; exit 1; }
+    echo "[INFO] $BOARD_ID 40PIN 候选GPIO: $GPIO40"
+    [ "${1:-}" = --run-gpio ] || {
+        echo '[INFO] 接好LED治具后执行 gpio40.sh --run-gpio；结果需人工确认'
+        exit 0
+    }
+    [ "$(id -u)" -eq 0 ] || fail '请通过 sudo 运行测试'
+    command -v flock >/dev/null || fail '缺少命令: flock'
+    exec 8>/run/armsom-gpio40.lock
+    flock -n 8 || fail '40PIN测试正在运行'
 
-export_gpio() {
-  for IN in $GPIOS ; do
-    EXPORT=/sys/class/gpio/export
-    VALUE=/sys/class/gpio/gpio$IN/value
-    if [ ! -f $VALUE ] ; then
-      echo $IN > $EXPORT
-    fi
-  done
-}
-out_gpio() {
-  for IN in $GPIOS ; do
-    DIR=/sys/class/gpio/gpio$IN/direction
-    if [ -f "$DIR" ] ; then
-      echo  out > $DIR
-    fi
-  done
-}
+    # Rockchip has one controller; Allwinner may have main and R controllers.
+    local pinmux_files=() file gpio val i owned='' lines=()
+    for file in /sys/kernel/debug/pinctrl/*/pinmux-pins; do
+        [ ! -r "$file" ] || pinmux_files+=("$file")
+    done
+    [ ${#pinmux_files[@]} -gt 0 ] || fail '无法检查pinctrl占用，拒绝操作GPIO'
+    cleanup_gpio() {
+        local g
+        for g in $owned; do
+            echo in > "/sys/class/gpio/gpio$g/direction" 2>/dev/null || :
+            echo "$g" > /sys/class/gpio/unexport 2>/dev/null || :
+        done
+    }
+    trap cleanup_gpio EXIT
+    trap 'exit 130' INT TERM HUP
 
-hi_gpio() {
-  for IN in $GPIOS ; do
-    VALUE=/sys/class/gpio/gpio$IN/value
-    if [ -f "$VALUE" ] ; then
-      echo 1 > $VALUE
-    fi
-  done
-}
+    for gpio in $GPIO40; do
+        mapfile -t lines < <(grep -h -E "^pin $gpio " "${pinmux_files[@]}")
+        if [ ${#lines[@]} -ne 1 ]; then
+            echo "[SKIP] GPIO$gpio 无法唯一确认pinctrl状态"; continue
+        fi
+        if [[ ${lines[0]} != *'(MUX UNCLAIMED)'* || ${lines[0]} != *'(GPIO UNCLAIMED)'* ]] ||
+                [ -d "/sys/class/gpio/gpio$gpio" ]; then
+            echo "[SKIP] GPIO$gpio 已被占用，不改复用/方向"; continue
+        fi
+        echo "$gpio" > /sys/class/gpio/export || fail "GPIO$gpio导出失败"
+        owned="$owned $gpio"
+        echo low > "/sys/class/gpio/gpio$gpio/direction" || fail "GPIO$gpio方向设置失败"
+        echo "[INFO] GPIO$gpio 已加入LED测试"
+    done
+    [ -n "$owned" ] || fail '没有可用GPIO'
+    echo '[INFO] LED 将闪烁约10秒，可在结束后再次点击开始重测'
+    for ((i=0; i<10; i++)); do
+        for val in 1 0; do
+            for gpio in $owned; do
+                echo "$val" > "/sys/class/gpio/gpio$gpio/value" || fail "GPIO$gpio写入失败"
+            done
+            sleep 0.5
+        done
+    done
+    cleanup_gpio
+    trap - EXIT INT TERM HUP
+    echo '[INFO] LED闪烁完成，已释放本脚本GPIO；请人工判定40PIN是否通过'
+)
 
-on_off_led()
-{
-ONOFF=$1
-  for IN in $GPIOS ; do
-    VALUE=/sys/class/gpio/gpio$IN/value
-    if [ -f "$VALUE" ] ; then
-      echo $ONOFF > $VALUE
-      sleep .1
-    fi
-  done
-}
-
-main() {
-    export_gpio
-    out_gpio
-    hi_gpio
-
-    for i in `seq 5`
-      do
-         on_off_led 0
-         sleep .5
-         on_off_led 1
-         sleep .5
-      done
-}
-
-main
+gpio40_test "$@"

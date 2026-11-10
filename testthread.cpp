@@ -30,12 +30,12 @@ void TestThread::run()
 
     QProcess process;
     process.start("bash", QStringList() << "-c" << m_command);
-    process.waitForFinished(-1);
+    const bool finished = process.waitForFinished(-1);
 
     int exitCode = process.exitCode();
     QProcess::ExitStatus exitStatus = process.exitStatus();
 
-    bool isSuccess = (exitStatus == QProcess::NormalExit && exitCode == 0);
+    const bool isSuccess = finished && exitStatus == QProcess::NormalExit && exitCode == 0;
 
     qDebug() << "[Auto Thread Done] Row:" << m_itemNum 
              << "ExitCode:" << exitCode 

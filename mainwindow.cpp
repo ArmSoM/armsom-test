@@ -81,7 +81,7 @@ QList<TestItem> getTestListByBoard(int condition)
                 {"Camera测试",   AUTO_TEST,   "sudo sh /opt/armsomtest/shell/camera.sh",  nullptr, nullptr},
                 {"音频测试",     AUTO_TEST, "sudo sh /opt/armsomtest/shell/audio.sh",nullptr, nullptr},
                 {"MIPI屏测试",   MANUAL_TEST, "", SLOT(on_mipipass_clicked()),   nullptr},
-                // {"40PIN测试",    MANUAL_TEST, "", SLOT(on_gpiopass_clicked()),    nullptr}
+                {"40PIN测试",    MANUAL_TEST, "", SLOT(on_gpiopass_clicked()),    nullptr}
             };
             break;
 
@@ -121,7 +121,7 @@ QList<TestItem> getTestListByBoard(int condition)
                 {"Camera测试",   AUTO_TEST,   "sudo sh /opt/armsomtest/shell/camera.sh",  nullptr, nullptr},
                 {"TFCARD测试",   AUTO_TEST,   "sudo sh /opt/armsomtest/shell/tfcard.sh",  nullptr, nullptr},
                 {"音频测试",     AUTO_TEST,   "sudo sh /opt/armsomtest/shell/audio.sh", nullptr, nullptr},
-                {"40PIN测试",    MANUAL_TEST, "sudo sh /opt/armsomtest/shell/gpio40.sh", SLOT(on_gpiopass_clicked()),    nullptr}
+                {"40PIN测试",    MANUAL_TEST, "", SLOT(on_gpiopass_clicked()),    nullptr}
             };
             break;
         case 6: // armsom-cm7s-io
@@ -133,7 +133,7 @@ QList<TestItem> getTestListByBoard(int condition)
                 {"Camera测试",   AUTO_TEST,   "sudo sh /opt/armsomtest/shell/camera.sh",  nullptr, nullptr},
                 {"TFCARD测试",   AUTO_TEST,   "sudo sh /opt/armsomtest/shell/tfcard.sh",  nullptr, nullptr},
                 {"音频测试",     AUTO_TEST,   "sudo sh /opt/armsomtest/shell/audio.sh", nullptr, nullptr},
-                {"40PIN测试",    MANUAL_TEST, "sudo sh /opt/armsomtest/shell/gpio40.sh", SLOT(on_gpiopass_clicked()),    nullptr}
+                {"40PIN测试",    MANUAL_TEST, "", SLOT(on_gpiopass_clicked()),    nullptr}
             };
             break;
         case 7: // armsom-aim7-io: GPIO is started separately by the operator.
@@ -186,6 +186,8 @@ void MainWindow::initUI()
             ui->label_2->setPixmap(QPixmap(":/images/armsom-cm5-io.png"));
             break;
         case 2:
+            ui->label_2->setPixmap(QPixmap(":/images/armsom-sige7.png"));
+            break;
         case 3:
             ui->label_2->setPixmap(QPixmap(":/images/armsom-sige7s.png"));
             break;
@@ -294,7 +296,8 @@ void MainWindow::initTestTable(int condition)
                 this->setRowTestResult(row, true); // 触发更新 UI 状态
             });
 
-            if (condition == 7 && item.name == QStringLiteral("40PIN测试")) {
+            if ((condition == 1 || condition == 2 || condition == 4 || condition == 5 || condition == 6 || condition == 7)
+                    && item.name == QStringLiteral("40PIN测试")) {
                 auto *controls = new QWidget(ui->tableWidget);
                 auto *layout = new QHBoxLayout(controls);
                 layout->setContentsMargins(0, 0, 0, 0);
